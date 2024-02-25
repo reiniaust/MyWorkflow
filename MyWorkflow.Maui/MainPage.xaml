@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MyWorkflow.Maui.MainPage">
+
+    <ScrollView>
+        <VerticalStackLayout 
+            Spacing="10"
+            Padding="10">
+            
+            <HorizontalStackLayout
+                Spacing="5">
+
+                <Entry
+                x:Name="entryText"
+                WidthRequest="200"
+                VerticalOptions="Center" />
+
+                <Button
+                x:Name="btnAdd"
+                Text="Hinzufügen"
+                Clicked="btnAdd_Clicked"
+                VerticalOptions="Center" />
+
+            </HorizontalStackLayout>
+
+            <ListView
+                x:Name="myListView">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextCell Text="{Binding Text}"></TextCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
