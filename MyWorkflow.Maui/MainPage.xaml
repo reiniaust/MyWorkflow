@@ -25,7 +25,7 @@
             </HorizontalStackLayout>
 
             <ListView
-                x:Name="myListView">
+                x:Name="myListView" ItemTapped="myListView_ItemTapped">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <TextCell Text="{Binding Text}"></TextCell>
