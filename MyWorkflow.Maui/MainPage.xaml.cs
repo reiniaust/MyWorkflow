@@ -11,7 +11,7 @@ public partial class MainPage : ContentPage
     List<MyItem> items;
     string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     string jsonString;
-    MyItem currentItem = new MyItem() { Id = 0 };
+    MyItem currentItem;
     ObservableCollection<MyItem> currentList;
 
     public MainPage()
@@ -27,10 +27,29 @@ public partial class MainPage : ContentPage
         {
             items = new List<MyItem>();
         }
-        currentList = new ObservableCollection<MyItem>(items.Where(i => i.ParenteId == currentItem.Id));
+        currentItem = items.Find(x => x.Id == 0);
+        if (currentItem == null)
+        {
+            currentItem = new MyItem() { Id = 0 };
+            items.Add(currentItem);
+        }
 
-        myListView.ItemsSource = currentList;
+
+        LoadCurrentList();
 	}
+    private void myListView_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+    {
+        currentItem = e.SelectedItem as MyItem;
+        LoadCurrentList();
+
+        //Shell.Current.GoToAsync(nameof(MainPage));
+    }
+
+    private void btnBack_Clicked(object sender, EventArgs e)
+    {
+        currentItem = items.Find(x => x.Id == currentItem.ParenteId);   
+        LoadCurrentList();
+    }
 
     private void btnAdd_Clicked(object sender, EventArgs e)
     {
@@ -48,17 +67,41 @@ public partial class MainPage : ContentPage
         items.Add(item);
         entryText.Text = "";
 
-        File.WriteAllText(Path.Combine(docPath, "MyWorkflowData.json"), JsonSerializer.Serialize(items));
+        SaveItems();
 
         currentList.Add(item);
     }
 
-    private void myListView_ItemTapped(object sender, ItemTappedEventArgs e)
+    private void Delete_Clicked(object sender, EventArgs e)
     {
-        currentItem = e.Item as MyItem;
+        var menuItem = sender as MenuItem;
+        MyItem item = menuItem.CommandParameter as MyItem;
+        item = items.Find(x => x.Id == item.Id);
+        if (item != null)
+        {
+            items.Remove(item);
+            SaveItems();
+            LoadCurrentList();
+        }
+    }
+
+    private void LoadCurrentList()
+    {
         currentList = new ObservableCollection<MyItem>(items.Where(i => i.ParenteId == currentItem.Id));
         myListView.ItemsSource = currentList;
         entryText.Text = currentItem.Text;
+        if (currentItem.Id != 0)
+        {
+            btnBack.IsVisible = true;
+        }
+        else { 
+            btnBack.IsVisible = false; 
+        }
+    }
+
+    private void SaveItems()
+    {
+        File.WriteAllText(Path.Combine(docPath, "MyWorkflowData.json"), JsonSerializer.Serialize(items));
     }
 }
 
