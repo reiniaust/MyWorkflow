@@ -9,6 +9,7 @@ namespace MyWorkflow.Maui
     public class AsanaTask
     {
         public string gid { get; set; }
+        public string parentid { get; set; }
         public string name { get; set; }
         // Add additional properties as needed
     }
