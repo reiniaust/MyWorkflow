@@ -49,7 +49,22 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="left_arrow.png" />
+	  <None Remove="plus.png" />
+	  <None Remove="Resources\Images\left_arrow.png" />
+	  <None Remove="Resources\Images\pen.png" />
+	  <None Remove="Resources\Images\plus.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <MauiImage Include="left_arrow.png" />
+	  <MauiImage Include="plus.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Asana.Net" Version="1.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 
 </Project>

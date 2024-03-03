@@ -1,15 +1,17 @@
 ﻿using System.Collections.ObjectModel;
 using MyWorkflow.Maui.Models;
-using System.Text.Json;
 using System.IO;
 using static System.Net.Mime.MediaTypeNames;
+using Asana.Net;
+using System.Text.Json;
+
 
 namespace MyWorkflow.Maui;
 
 public partial class MainPage : ContentPage
 {
     List<MyItem> items;
-    string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+    string docPath = "G:\\Meine Ablage"; //Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     string jsonString;
     MyItem currentItem;
     ObservableCollection<MyItem> currentList;
@@ -17,6 +19,9 @@ public partial class MainPage : ContentPage
     public MainPage()
 	{
 		InitializeComponent();
+
+
+        ReadAsana();
 
         try
         {
@@ -37,6 +42,7 @@ public partial class MainPage : ContentPage
 
         LoadCurrentList();
 	}
+
     private void myListView_ItemSelected(object sender, SelectedItemChangedEventArgs e)
     {
         currentItem = e.SelectedItem as MyItem;
@@ -69,7 +75,7 @@ public partial class MainPage : ContentPage
 
         SaveItems();
 
-        currentList.Add(item);
+        LoadCurrentList();
     }
 
     private void Delete_Clicked(object sender, EventArgs e)
@@ -92,16 +98,86 @@ public partial class MainPage : ContentPage
         entryText.Text = currentItem.Text;
         if (currentItem.Id != 0)
         {
-            btnBack.IsVisible = true;
+            btnBack.IsEnabled = true;
         }
         else { 
-            btnBack.IsVisible = false; 
+            btnBack.IsEnabled = false; 
         }
+        btnAdd.IsEnabled = false;
     }
 
     private void SaveItems()
     {
         File.WriteAllText(Path.Combine(docPath, "MyWorkflowData.json"), JsonSerializer.Serialize(items));
+    }
+
+    private void entryText_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (entryText.Text != null && entryText.Text != currentItem.Text)
+        {
+            btnAdd.IsEnabled = true;
+        }
+        else
+        {
+            btnAdd.IsEnabled = false;
+        }
+    }
+
+    private void entryText_Focused(object sender, FocusEventArgs e)
+    {
+        var entry = sender as Entry;
+
+        entry.CursorPosition = 0;
+        entry.SelectionLength = entry.Text == null ? 0 : entry.Text.Length;
+    }
+
+    private async Task ReadAsana()
+    {
+
+        /*
+        IAsanaApiClient client = AsanaApiClientFactory.Create("2/1204359925204139/1206050122835689:21d739ce4de9c0ce99be94e5fa9eb73a");
+        var tasks = await client.GetTasks("1206029338454980");
+
+        // Iterate over the tasks and print their names
+        foreach (var task in tasks)
+        {
+            Console.WriteLine(task.Name);
+        }
+        */
+
+        string accessToken = "2/1204359925204139/1206050122835689:21d739ce4de9c0ce99be94e5fa9eb73a";
+        string projectId = "1206029338454980";
+
+        using (HttpClient client = new HttpClient())
+        {
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+            // Get project tasks
+            string url = $"https://app.asana.com/api/1.0/projects/{projectId}/tasks";
+            HttpResponseMessage response = await client.GetAsync(url);
+            string responseContent = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                AsanaTasksResponse tasksResponse = JsonSerializer.Deserialize<AsanaTasksResponse>(responseContent);
+                foreach (var task in tasksResponse.data)
+                {
+                    url = $"https://app.asana.com/api/1.0/tasks/{task.gid}/subtasks";
+                    response = await client.GetAsync(url);
+                    responseContent = await response.Content.ReadAsStringAsync();
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        tasksResponse = JsonSerializer.Deserialize<AsanaTasksResponse>(responseContent);
+                    }
+                }
+            }
+            else
+            {
+                //Console.WriteLine($"Request failed with status code {response.StatusCode}");
+                //Console.WriteLine(responseContent);
+            }
+        }
     }
 }
 

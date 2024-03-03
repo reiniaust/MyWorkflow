@@ -9,20 +9,24 @@
             Padding="10">
             
             <HorizontalStackLayout
-                Spacing="5">
+                Spacing="5"
+                HeightRequest="50">
 
                 <Entry
-                x:Name="entryText"
-                WidthRequest="200"
-                VerticalOptions="Center" />
+                    x:Name="entryText"
+                    WidthRequest="200"
+                    VerticalOptions="Center" 
+                    Focused="entryText_Focused"
+                    TextChanged="entryText_TextChanged">
+                </Entry>
 
-                <Button
+                <ImageButton
                     x:Name="btnBack"
-                    Text="Zurück"
+                    Source="left_arrow.png"
                     Clicked="btnBack_Clicked" />
-                <Button
+                <ImageButton
                     x:Name="btnAdd"
-                    Text="Hinzufügen"
+                    Source="plus.png"
                     Clicked="btnAdd_Clicked"
                     VerticalOptions="Center" />
 
