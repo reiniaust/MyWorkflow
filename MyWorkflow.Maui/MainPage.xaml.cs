@@ -11,7 +11,8 @@ namespace MyWorkflow.Maui;
 public partial class MainPage : ContentPage
 {
     List<MyItem> items;
-    string docPath = "G:\\Meine Ablage"; //Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+    List<AsanaTask> tasks;
+    string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     string jsonString;
     MyItem currentItem;
     ObservableCollection<MyItem> currentList;
@@ -21,16 +22,17 @@ public partial class MainPage : ContentPage
 		InitializeComponent();
 
 
-        ReadAsana();
 
         try
         {
             jsonString = File.ReadAllText(Path.Combine(docPath, "MyWorkflowData.json"));
-            items = new List<MyItem>(JsonSerializer.Deserialize<MyItem[]>(jsonString));
+            //items = new List<MyItem>(JsonSerializer.Deserialize<MyItem[]>(jsonString));
+            tasks = new List<AsanaTask>(JsonSerializer.Deserialize<AsanaTask[]>(jsonString));
         }
         catch (Exception)
         {
             items = new List<MyItem>();
+            tasks = new List<AsanaTask>();
         }
         currentItem = items.Find(x => x.Id == 0);
         if (currentItem == null)
@@ -39,6 +41,7 @@ public partial class MainPage : ContentPage
             items.Add(currentItem);
         }
 
+        ReadAsana();
 
         LoadCurrentList();
 	}
