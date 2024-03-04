@@ -8,6 +8,6 @@ namespace MyWorkflow.Maui
 {
     public class AsanaTasksResponse
     {
-        public List<AsanaTask> data { get; set; }
+        public List<MyTask> data { get; set; }
     }
 }

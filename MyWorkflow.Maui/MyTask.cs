@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MyWorkflow.Maui
 {
-    public class AsanaTask
+    public class MyTask
     {
         public string gid { get; set; }
         public string parentid { get; set; }

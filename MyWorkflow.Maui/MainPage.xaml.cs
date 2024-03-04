@@ -10,12 +10,12 @@ namespace MyWorkflow.Maui;
 
 public partial class MainPage : ContentPage
 {
-    List<MyItem> items;
-    List<AsanaTask> tasks;
+    List<MyTask> tasks;
     string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     string jsonString;
-    MyItem currentItem;
-    ObservableCollection<MyItem> currentList;
+    MyTask currentItem;
+    ObservableCollection<MyTask> currentList;
+    Random random = new Random();
 
     public MainPage()
 	{
@@ -26,29 +26,31 @@ public partial class MainPage : ContentPage
         try
         {
             jsonString = File.ReadAllText(Path.Combine(docPath, "MyWorkflowData.json"));
-            //items = new List<MyItem>(JsonSerializer.Deserialize<MyItem[]>(jsonString));
-            tasks = new List<AsanaTask>(JsonSerializer.Deserialize<AsanaTask[]>(jsonString));
+            //tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
+            tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
         }
         catch (Exception)
         {
-            items = new List<MyItem>();
-            tasks = new List<AsanaTask>();
+            tasks = new List<MyTask>();
         }
-        currentItem = items.Find(x => x.Id == 0);
+        currentItem = tasks.Find(x => x.gid == "");
         if (currentItem == null)
         {
-            currentItem = new MyItem() { Id = 0 };
-            items.Add(currentItem);
+            currentItem = new MyTask() { gid = "" };
+            tasks.Add(currentItem);
         }
 
-        ReadAsana();
+        foreach (var task in tasks.Where(x => x.name != null && x.name.Contains("AccessToken:")))
+        {
+            ReadAsana(task);
+        }
 
         LoadCurrentList();
 	}
 
     private void myListView_ItemSelected(object sender, SelectedItemChangedEventArgs e)
     {
-        currentItem = e.SelectedItem as MyItem;
+        currentItem = e.SelectedItem as MyTask;
         LoadCurrentList();
 
         //Shell.Current.GoToAsync(nameof(MainPage));
@@ -56,24 +58,20 @@ public partial class MainPage : ContentPage
 
     private void btnBack_Clicked(object sender, EventArgs e)
     {
-        currentItem = items.Find(x => x.Id == currentItem.ParenteId);   
+        currentItem = tasks.Find(x => x.gid == currentItem.parentid);   
         LoadCurrentList();
     }
 
     private void btnAdd_Clicked(object sender, EventArgs e)
     {
-        int id = 1;
-        if (items.Count > 0)
+        string id = random.Next(100000000, 999999999).ToString();
+        MyTask item = new MyTask()
         {
-            id = items.Max(i => i.Id) + 1;
-        }
-        MyItem item = new MyItem()
-        {
-            Id = id,
-            ParenteId = currentItem.Id,
-            Text = entryText.Text
+            gid = id,
+            parentid = currentItem.gid,
+            name = entryText.Text
         };
-        items.Add(item);
+        tasks.Add(item);
         entryText.Text = "";
 
         SaveItems();
@@ -84,11 +82,11 @@ public partial class MainPage : ContentPage
     private void Delete_Clicked(object sender, EventArgs e)
     {
         var menuItem = sender as MenuItem;
-        MyItem item = menuItem.CommandParameter as MyItem;
-        item = items.Find(x => x.Id == item.Id);
+        MyTask item = menuItem.CommandParameter as MyTask;
+        item = tasks.Find(x => x.gid == item.gid);
         if (item != null)
         {
-            items.Remove(item);
+            tasks.Remove(item);
             SaveItems();
             LoadCurrentList();
         }
@@ -96,10 +94,10 @@ public partial class MainPage : ContentPage
 
     private void LoadCurrentList()
     {
-        currentList = new ObservableCollection<MyItem>(items.Where(i => i.ParenteId == currentItem.Id));
+        currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid));
         myListView.ItemsSource = currentList;
-        entryText.Text = currentItem.Text;
-        if (currentItem.Id != 0)
+        entryText.Text = currentItem.name;
+        if (currentItem.gid != "")
         {
             btnBack.IsEnabled = true;
         }
@@ -111,12 +109,12 @@ public partial class MainPage : ContentPage
 
     private void SaveItems()
     {
-        File.WriteAllText(Path.Combine(docPath, "MyWorkflowData.json"), JsonSerializer.Serialize(items));
+        File.WriteAllText(Path.Combine(docPath, "MyWorkflowData.json"), JsonSerializer.Serialize(tasks));
     }
 
     private void entryText_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (entryText.Text != null && entryText.Text != currentItem.Text)
+        if (entryText.Text != null && entryText.Text != currentItem.name)
         {
             btnAdd.IsEnabled = true;
         }
@@ -134,7 +132,7 @@ public partial class MainPage : ContentPage
         entry.SelectionLength = entry.Text == null ? 0 : entry.Text.Length;
     }
 
-    private async Task ReadAsana()
+    private async Task ReadAsana(MyTask rootTask)
     {
 
         /*
@@ -146,10 +144,12 @@ public partial class MainPage : ContentPage
         {
             Console.WriteLine(task.Name);
         }
-        */
 
         string accessToken = "2/1204359925204139/1206050122835689:21d739ce4de9c0ce99be94e5fa9eb73a";
         string projectId = "1206029338454980";
+        */
+        string accessToken = rootTask.name.Split("AccessToken: ")[1].Split(",")[0];
+        string projectId = rootTask.name.Split("ProjectId: ")[1].Split(")")[0];
 
         using (HttpClient client = new HttpClient())
         {
@@ -165,20 +165,34 @@ public partial class MainPage : ContentPage
                 AsanaTasksResponse tasksResponse = JsonSerializer.Deserialize<AsanaTasksResponse>(responseContent);
                 foreach (var task in tasksResponse.data)
                 {
-                    url = $"https://app.asana.com/api/1.0/tasks/{task.gid}/subtasks";
-                    response = await client.GetAsync(url);
-                    responseContent = await response.Content.ReadAsStringAsync();
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        tasksResponse = JsonSerializer.Deserialize<AsanaTasksResponse>(responseContent);
-                    }
+                    task.parentid = rootTask.gid;
+                    tasks.Add(task);
+                    await ReadSubTasks(task);
                 }
+                LoadCurrentList();
             }
             else
             {
                 //Console.WriteLine($"Request failed with status code {response.StatusCode}");
                 //Console.WriteLine(responseContent);
+            }
+
+            async Task ReadSubTasks(MyTask task)
+            {
+                url = $"https://app.asana.com/api/1.0/tasks/{task.gid}/subtasks";
+                response = await client.GetAsync(url);
+                responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    AsanaTasksResponse tasksResponse = JsonSerializer.Deserialize<AsanaTasksResponse>(responseContent);
+                    foreach (var subtask in tasksResponse.data)
+                    {
+                        subtask.parentid = task.gid;
+                        tasks.Add(subtask);
+                        ReadSubTasks(subtask);
+                    }
+                }
             }
         }
     }
