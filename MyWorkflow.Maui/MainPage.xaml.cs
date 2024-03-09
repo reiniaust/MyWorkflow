@@ -4,6 +4,7 @@ using System.IO;
 using static System.Net.Mime.MediaTypeNames;
 using Asana.Net;
 using System.Text.Json;
+using RestSharp;
 
 
 namespace MyWorkflow.Maui;
@@ -16,12 +17,12 @@ public partial class MainPage : ContentPage
     MyTask currentItem;
     ObservableCollection<MyTask> currentList;
     Random random = new Random();
+    int idFrom = 100000000;
+    int idTo = 999999999;
 
     public MainPage()
 	{
 		InitializeComponent();
-
-
 
         try
         {
@@ -64,7 +65,7 @@ public partial class MainPage : ContentPage
 
     private void btnAdd_Clicked(object sender, EventArgs e)
     {
-        string id = random.Next(100000000, 999999999).ToString();
+        string id = random.Next(idFrom, idTo).ToString();
         MyTask item = new MyTask()
         {
             gid = id,
@@ -74,11 +75,12 @@ public partial class MainPage : ContentPage
         tasks.Add(item);
         entryText.Text = "";
 
-        SaveItems();
+        SaveTask("add", item);
 
         LoadCurrentList();
     }
 
+    
     private void Delete_Clicked(object sender, EventArgs e)
     {
         var menuItem = sender as MenuItem;
@@ -87,7 +89,7 @@ public partial class MainPage : ContentPage
         if (item != null)
         {
             tasks.Remove(item);
-            SaveItems();
+            SaveTask("delete", item);
             LoadCurrentList();
         }
     }
@@ -107,8 +109,23 @@ public partial class MainPage : ContentPage
         btnAdd.IsEnabled = false;
     }
 
+    private void SaveTask(string operation, MyTask item)
+    {
+        if (currentItem.name.Contains("AccessToken:") || currentItem.gid.Length > idTo.ToString().Length)
+        {
+            SaveAsanaTask(operation, item);
+        }
+        else
+        {
+            SaveItems();
+        }
+    }
+
     private void SaveItems()
     {
+        // Asana Tasks löschen
+        tasks = tasks.Where(x => x.gid.Length <= idTo.ToString().Length).ToList();
+
         File.WriteAllText(Path.Combine(docPath, "MyWorkflowData.json"), JsonSerializer.Serialize(tasks));
     }
 
@@ -135,19 +152,6 @@ public partial class MainPage : ContentPage
     private async Task ReadAsana(MyTask rootTask)
     {
 
-        /*
-        IAsanaApiClient client = AsanaApiClientFactory.Create("2/1204359925204139/1206050122835689:21d739ce4de9c0ce99be94e5fa9eb73a");
-        var tasks = await client.GetTasks("1206029338454980");
-
-        // Iterate over the tasks and print their names
-        foreach (var task in tasks)
-        {
-            Console.WriteLine(task.Name);
-        }
-
-        string accessToken = "2/1204359925204139/1206050122835689:21d739ce4de9c0ce99be94e5fa9eb73a";
-        string projectId = "1206029338454980";
-        */
         string accessToken = rootTask.name.Split("AccessToken: ")[1].Split(",")[0];
         string projectId = rootTask.name.Split("ProjectId: ")[1].Split(")")[0];
 
@@ -194,6 +198,55 @@ public partial class MainPage : ContentPage
                     }
                 }
             }
+        }
+    }
+    private async Task SaveAsanaTask(string operation, MyTask task)
+    {
+        MyTask rootTask = task;
+        string accessToken = "";
+        string projectId = "";
+        while (rootTask != null && accessToken == "")
+        {
+            if (rootTask.name.Contains("AccessToken:"))
+            {
+                accessToken = rootTask.name.Split("AccessToken: ")[1].Split(",")[0];
+                projectId = rootTask.name.Split("ProjectId: ")[1].Split(")")[0];
+            }
+            rootTask = tasks.Find(x => x.gid == rootTask.parentid);
+        }
+
+        string url = "https://app.asana.com/api/1.0/tasks";
+        if (operation == "delete")
+        {
+            url += "/" + task.gid;
+        }
+        var options = new RestClientOptions(url);
+        var client = new RestClient(options);
+        var request = new RestRequest("");
+        request.AddHeader("accept", "application/json");
+        request.AddHeader("authorization", "Bearer " + accessToken);
+
+        if (operation == "add")
+        {
+            string beginStr = "{\"data\":{\"name\":\"" + task.name;
+            if (currentItem.name.Contains("AccessToken:"))
+            {
+                request.AddJsonBody(beginStr + "\",\"projects\":[\"" + projectId + "\"]}}", false);
+            }
+            else
+            {
+                request.AddJsonBody(beginStr + "\",\"parent\":\"" + currentItem.gid + "\"}}", false);
+            }
+        }
+
+        if (operation == "add")
+        {
+            var response = await client.PostAsync(request);
+        }
+
+        if (operation == "delete")
+        {
+            var response = await client.DeleteAsync(request);
         }
     }
 }
