@@ -10,7 +10,7 @@
             
             <HorizontalStackLayout
                 Spacing="5"
-                HeightRequest="50">
+                HeightRequest="45">
 
                 <Entry
                     x:Name="entryText"
@@ -24,6 +24,10 @@
                     x:Name="btnBack"
                     Source="left_arrow.png"
                     Clicked="btnBack_Clicked" />
+                <ImageButton
+                    x:Name="btnSearch"
+                    Source="search.png"
+                    Clicked="btnSearch_Clicked" />
                 <ImageButton
                     x:Name="btnAdd"
                     Source="plus.png"

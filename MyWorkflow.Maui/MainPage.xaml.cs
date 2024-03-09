@@ -19,6 +19,8 @@ public partial class MainPage : ContentPage
     Random random = new Random();
     int idFrom = 100000000;
     int idTo = 999999999;
+    string searchText = "";
+    int searchCounter = 0;
 
     public MainPage()
 	{
@@ -49,12 +51,47 @@ public partial class MainPage : ContentPage
         LoadCurrentList();
 	}
 
+    private void entryText_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (entryText.Text != null && entryText.Text != currentItem.name)
+        {
+            searchText = entryText.Text;
+            searchCounter = 0;
+
+            btnAdd.IsEnabled = true;
+            if (currentItem.gid != "")
+            {
+                btnUpdate.IsEnabled = true;
+            }
+        }
+        else
+        {
+            btnAdd.IsEnabled = false;
+            btnUpdate.IsEnabled = false;
+        }
+    }
+
     private void myListView_ItemSelected(object sender, SelectedItemChangedEventArgs e)
     {
         currentItem = e.SelectedItem as MyTask;
         LoadCurrentList();
 
         //Shell.Current.GoToAsync(nameof(MainPage));
+    }
+
+    private void btnSearch_Clicked(object sender, EventArgs e)
+    {
+        int i = 0;
+        foreach (var task in tasks.Where(x => searchText == "" || (x.name != null && x.name.Contains(searchText, StringComparison.OrdinalIgnoreCase))))
+        {
+            if (i == searchCounter)
+            {
+                currentItem = task;
+            }
+            i += 1;
+        }
+        searchCounter++;
+        LoadCurrentList();
     }
 
     private void btnBack_Clicked(object sender, EventArgs e)
@@ -111,6 +148,7 @@ public partial class MainPage : ContentPage
             btnBack.IsEnabled = false; 
         }
         btnAdd.IsEnabled = false;
+        btnUpdate.IsEnabled = false;
     }
 
     private void SaveTask(string operation, MyTask item)
@@ -138,20 +176,6 @@ public partial class MainPage : ContentPage
         tasks = tasks.Where(x => x.gid.Length <= idTo.ToString().Length).ToList();
 
         File.WriteAllText(Path.Combine(docPath, "MyWorkflowData.json"), JsonSerializer.Serialize(tasks));
-    }
-
-    private void entryText_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (entryText.Text != null && entryText.Text != currentItem.name)
-        {
-            btnAdd.IsEnabled = true;
-            btnUpdate.IsEnabled = true;
-        }
-        else
-        {
-            btnAdd.IsEnabled = false;
-            btnUpdate.IsEnabled = false;
-        }
     }
 
     private void entryText_Focused(object sender, FocusEventArgs e)
