@@ -27,10 +27,15 @@
                 <ImageButton
                     x:Name="btnAdd"
                     Source="plus.png"
-                    Clicked="btnAdd_Clicked"
-                    VerticalOptions="Center" />
+                    Clicked="btnAdd_Clicked" />
+                <ImageButton
+                    x:Name="btnUpdate"
+                    Source="pen.png"
+                    Clicked="btnUpdate_Clicked" />
 
             </HorizontalStackLayout>
+
+            <Label x:Name="lblMessage"></Label>
 
             <ListView
                 x:Name="myListView" ItemSelected="myListView_ItemSelected">

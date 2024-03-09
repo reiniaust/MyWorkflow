@@ -5,7 +5,7 @@ using static System.Net.Mime.MediaTypeNames;
 using Asana.Net;
 using System.Text.Json;
 using RestSharp;
-
+using System.ComponentModel.Design;
 
 namespace MyWorkflow.Maui;
 
@@ -77,10 +77,15 @@ public partial class MainPage : ContentPage
 
         SaveTask("add", item);
 
-        LoadCurrentList();
     }
 
-    
+    private void btnUpdate_Clicked(object sender, EventArgs e)
+    {
+        currentItem.name = entryText.Text;
+        SaveTask("update", currentItem);
+    }
+
+
     private void Delete_Clicked(object sender, EventArgs e)
     {
         var menuItem = sender as MenuItem;
@@ -90,7 +95,6 @@ public partial class MainPage : ContentPage
         {
             tasks.Remove(item);
             SaveTask("delete", item);
-            LoadCurrentList();
         }
     }
 
@@ -119,6 +123,13 @@ public partial class MainPage : ContentPage
         {
             SaveItems();
         }
+
+        if (operation == "update")
+        {
+            currentItem = tasks.Find(x => x.gid == currentItem.parentid);
+        }
+
+        LoadCurrentList();
     }
 
     private void SaveItems()
@@ -134,10 +145,12 @@ public partial class MainPage : ContentPage
         if (entryText.Text != null && entryText.Text != currentItem.name)
         {
             btnAdd.IsEnabled = true;
+            btnUpdate.IsEnabled = true;
         }
         else
         {
             btnAdd.IsEnabled = false;
+            btnUpdate.IsEnabled = false;
         }
     }
 
@@ -197,6 +210,10 @@ public partial class MainPage : ContentPage
                         ReadSubTasks(subtask);
                     }
                 }
+                else 
+                {
+                    lblMessage.Text = response.Content.ToString();
+                }
             }
         }
     }
@@ -216,7 +233,7 @@ public partial class MainPage : ContentPage
         }
 
         string url = "https://app.asana.com/api/1.0/tasks";
-        if (operation == "delete")
+        if (operation == "update" || operation == "delete")
         {
             url += "/" + task.gid;
         }
@@ -226,28 +243,49 @@ public partial class MainPage : ContentPage
         request.AddHeader("accept", "application/json");
         request.AddHeader("authorization", "Bearer " + accessToken);
 
-        if (operation == "add")
+        if (operation == "add" || operation == "update")
         {
             string beginStr = "{\"data\":{\"name\":\"" + task.name;
-            if (currentItem.name.Contains("AccessToken:"))
+            if (operation == "add")
             {
-                request.AddJsonBody(beginStr + "\",\"projects\":[\"" + projectId + "\"]}}", false);
+                if (currentItem.name.Contains("AccessToken:"))
+                {
+                    request.AddJsonBody(beginStr + "\",\"projects\":[\"" + projectId + "\"]}}", false);
+                }
+                else
+                {
+                    request.AddJsonBody(beginStr + "\",\"parent\":\"" + currentItem.gid + "\"}}", false);
+                }
             }
             else
             {
-                request.AddJsonBody(beginStr + "\",\"parent\":\"" + currentItem.gid + "\"}}", false);
+                request.AddJsonBody(beginStr + "\"}}", false);
             }
         }
 
         if (operation == "add")
         {
             var response = await client.PostAsync(request);
+            if (!response.IsSuccessful)
+            {
+                lblMessage.Text = response.Content.ToString();
+            }
         }
-
+        if (operation == "update")
+        {
+            var response = await client.PutAsync(request);
+            if (!response.IsSuccessful)
+            { 
+                lblMessage.Text = response.Content.ToString();
+            }
+        }
         if (operation == "delete")
         {
             var response = await client.DeleteAsync(request);
         }
+
+
     }
+
 }
 
