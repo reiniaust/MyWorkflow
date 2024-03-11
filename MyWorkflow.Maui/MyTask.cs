@@ -12,5 +12,6 @@ namespace MyWorkflow.Maui
         public string parentid { get; set; }
         public string name { get; set; }
         // Add additional properties as needed
+        public string created_at { get; set; }
     }
 }

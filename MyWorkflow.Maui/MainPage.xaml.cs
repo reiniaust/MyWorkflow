@@ -6,6 +6,7 @@ using Asana.Net;
 using System.Text.Json;
 using RestSharp;
 using System.ComponentModel.Design;
+using System.Globalization;
 
 namespace MyWorkflow.Maui;
 
@@ -42,6 +43,9 @@ public partial class MainPage : ContentPage
             currentItem = new MyTask() { gid = "" };
             tasks.Add(currentItem);
         }
+
+        // Asana Tasks löschen
+        tasks = tasks.Where(x => x.gid.Length <= idTo.ToString().Length).ToList();
 
         foreach (var task in tasks.Where(x => x.name != null && x.name.Contains("AccessToken:")))
         {
@@ -82,7 +86,8 @@ public partial class MainPage : ContentPage
     private void btnSearch_Clicked(object sender, EventArgs e)
     {
         int i = 0;
-        foreach (var task in tasks.Where(x => searchText == "" || (x.name != null && x.name.Contains(searchText, StringComparison.OrdinalIgnoreCase))))
+        foreach (var task in tasks.Where(x => searchText == "" || (x.name != null && x.name.Contains(searchText, StringComparison.OrdinalIgnoreCase)))
+            .OrderByDescending(x => x.created_at))
         {
             if (i == searchCounter)
             {
@@ -107,7 +112,8 @@ public partial class MainPage : ContentPage
         {
             gid = id,
             parentid = currentItem.gid,
-            name = entryText.Text
+            name = entryText.Text,
+            created_at = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss", CultureInfo.InvariantCulture)
         };
         tasks.Add(item);
         entryText.Text = "";
@@ -153,7 +159,7 @@ public partial class MainPage : ContentPage
 
     private void SaveTask(string operation, MyTask item)
     {
-        if (currentItem.name.Contains("AccessToken:") || currentItem.gid.Length > idTo.ToString().Length)
+        if (currentItem.name != null && currentItem.name.Contains("AccessToken:") || currentItem.gid.Length > idTo.ToString().Length)
         {
             SaveAsanaTask(operation, item);
         }
@@ -172,9 +178,6 @@ public partial class MainPage : ContentPage
 
     private void SaveItems()
     {
-        // Asana Tasks löschen
-        tasks = tasks.Where(x => x.gid.Length <= idTo.ToString().Length).ToList();
-
         File.WriteAllText(Path.Combine(docPath, "MyWorkflowData.json"), JsonSerializer.Serialize(tasks));
     }
 
@@ -192,6 +195,14 @@ public partial class MainPage : ContentPage
         string accessToken = rootTask.name.Split("AccessToken: ")[1].Split(",")[0];
         string projectId = rootTask.name.Split("ProjectId: ")[1].Split(")")[0];
 
+        var options = new RestClientOptions($"https://app.asana.com/api/1.0/tasks?project={projectId}");
+        var client = new RestClient(options);
+        var request = new RestRequest("");
+        request.AddHeader("accept", "application/json");
+        request.AddHeader("authorization", $"Bearer {accessToken}");
+        var response = await client.GetAsync(request);
+
+        /*
         using (HttpClient client = new HttpClient())
         {
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
@@ -200,12 +211,21 @@ public partial class MainPage : ContentPage
             string url = $"https://app.asana.com/api/1.0/projects/{projectId}/tasks";
             HttpResponseMessage response = await client.GetAsync(url);
             string responseContent = await response.Content.ReadAsStringAsync();
+            */
 
             if (response.IsSuccessStatusCode)
             {
-                AsanaTasksResponse tasksResponse = JsonSerializer.Deserialize<AsanaTasksResponse>(responseContent);
+                AsanaTasksResponse tasksResponse = JsonSerializer.Deserialize<AsanaTasksResponse>(response.Content);
                 foreach (var task in tasksResponse.data)
                 {
+                    options = new RestClientOptions($"https://app.asana.com/api/1.0/tasks/{task.gid}");
+                    client = new RestClient(options);
+                    request = new RestRequest("");
+                    request.AddHeader("accept", "application/json");
+                    request.AddHeader("authorization", $"Bearer {accessToken}");
+                    response = await client.GetAsync(request);
+                    AsanaTaskResponse taskResponse = JsonSerializer.Deserialize<AsanaTaskResponse>(response.Content);
+                    task.created_at = taskResponse.data.created_at;
                     task.parentid = rootTask.gid;
                     tasks.Add(task);
                     await ReadSubTasks(task);
@@ -220,15 +240,32 @@ public partial class MainPage : ContentPage
 
             async Task ReadSubTasks(MyTask task)
             {
+                var options = new RestClientOptions($"https://app.asana.com/api/1.0/tasks/{task.gid}/subtasks");
+                var client = new RestClient(options);
+                var request = new RestRequest("");
+                request.AddHeader("accept", "application/json");
+                request.AddHeader("authorization", $"Bearer {accessToken}");
+                var response = await client.GetAsync(request);
+
+                /*
                 url = $"https://app.asana.com/api/1.0/tasks/{task.gid}/subtasks";
                 response = await client.GetAsync(url);
                 responseContent = await response.Content.ReadAsStringAsync();
+                */
 
                 if (response.IsSuccessStatusCode)
                 {
-                    AsanaTasksResponse tasksResponse = JsonSerializer.Deserialize<AsanaTasksResponse>(responseContent);
+                    AsanaTasksResponse tasksResponse = JsonSerializer.Deserialize<AsanaTasksResponse>(response.Content);
                     foreach (var subtask in tasksResponse.data)
                     {
+                        options = new RestClientOptions($"https://app.asana.com/api/1.0/tasks/{subtask.gid}");
+                        client = new RestClient(options);
+                        request = new RestRequest("");
+                        request.AddHeader("accept", "application/json");
+                        request.AddHeader("authorization", $"Bearer {accessToken}");
+                        response = await client.GetAsync(request);
+                        AsanaTaskResponse taskResponse = JsonSerializer.Deserialize<AsanaTaskResponse>(response.Content);
+                        subtask.created_at = taskResponse.data.created_at;
                         subtask.parentid = task.gid;
                         tasks.Add(subtask);
                         ReadSubTasks(subtask);
@@ -239,7 +276,7 @@ public partial class MainPage : ContentPage
                     lblMessage.Text = response.Content.ToString();
                 }
             }
-        }
+        //}
     }
     private async Task SaveAsanaTask(string operation, MyTask task)
     {

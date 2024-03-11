@@ -45,7 +45,7 @@
                 x:Name="myListView" ItemSelected="myListView_ItemSelected">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextCell Text="{Binding name}">
+                        <TextCell Text="{Binding name}" Detail="{Binding created_at}">
                             <TextCell.ContextActions>
                                 <MenuItem 
                                     Text="Löschen"
