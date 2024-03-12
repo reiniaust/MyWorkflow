@@ -7,7 +7,9 @@
         <VerticalStackLayout 
             Spacing="10"
             Padding="10">
-            
+
+            <Label x:Name="lblStatus"></Label>
+
             <HorizontalStackLayout
                 Spacing="5"
                 HeightRequest="45">
@@ -38,8 +40,6 @@
                     Clicked="btnUpdate_Clicked" />
 
             </HorizontalStackLayout>
-
-            <Label x:Name="lblMessage"></Label>
 
             <ListView
                 x:Name="myListView" ItemSelected="myListView_ItemSelected">

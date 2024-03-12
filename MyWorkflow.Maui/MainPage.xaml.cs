@@ -7,6 +7,7 @@ using System.Text.Json;
 using RestSharp;
 using System.ComponentModel.Design;
 using System.Globalization;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MyWorkflow.Maui;
 
@@ -86,7 +87,7 @@ public partial class MainPage : ContentPage
     private void btnSearch_Clicked(object sender, EventArgs e)
     {
         int i = 0;
-        foreach (var task in tasks.Where(x => searchText == "" || (x.name != null && x.name.Contains(searchText, StringComparison.OrdinalIgnoreCase)))
+        foreach (var task in tasks.Where(x => isSearchInTitem(x))
             .OrderByDescending(x => x.created_at))
         {
             if (i == searchCounter)
@@ -98,6 +99,31 @@ public partial class MainPage : ContentPage
         searchCounter++;
         LoadCurrentList();
     }
+
+    bool isSearchInTitem(MyTask item)
+    {
+        bool found = false;
+        var words = searchText.Split(' ');
+        foreach (var word in words)
+        {
+            if (searchText == "" || (item.name != null && item.name.Contains(words[0], StringComparison.OrdinalIgnoreCase)))
+            {
+                found = true; break;
+            }
+        }
+        if (found && words.Length > 1)
+        {
+            foreach (var word in words)
+            {
+                if (!(ItemPath(item) + item.name).Contains(word, StringComparison.OrdinalIgnoreCase))
+                {
+                    found = false; break;
+                }
+            }
+        }
+        return found;
+    }
+
 
     private void btnBack_Clicked(object sender, EventArgs e)
     {
@@ -146,6 +172,7 @@ public partial class MainPage : ContentPage
         currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid));
         myListView.ItemsSource = currentList;
         entryText.Text = currentItem.name;
+        lblStatus.Text = ItemPath(currentItem);
         if (currentItem.gid != "")
         {
             btnBack.IsEnabled = true;
@@ -273,7 +300,7 @@ public partial class MainPage : ContentPage
                 }
                 else 
                 {
-                    lblMessage.Text = response.Content.ToString();
+                    lblStatus.Text = response.Content.ToString();
                 }
             }
         //}
@@ -329,7 +356,7 @@ public partial class MainPage : ContentPage
             var response = await client.PostAsync(request);
             if (!response.IsSuccessful)
             {
-                lblMessage.Text = response.Content.ToString();
+                lblStatus.Text = response.Content.ToString();
             }
         }
         if (operation == "update")
@@ -337,7 +364,7 @@ public partial class MainPage : ContentPage
             var response = await client.PutAsync(request);
             if (!response.IsSuccessful)
             { 
-                lblMessage.Text = response.Content.ToString();
+                lblStatus.Text = response.Content.ToString();
             }
         }
         if (operation == "delete")
@@ -347,6 +374,21 @@ public partial class MainPage : ContentPage
 
 
     }
+
+    public string ItemPath(MyTask task)
+    {
+        string path = "";
+        while (task != null && task.parentid != null)
+        {
+            task = tasks.FirstOrDefault(i => i.gid == task.parentid);
+            if (task != null && task.name != null)
+            {
+                path += " < " + task.name;
+            }
+        }
+        return path;
+    }
+
 
 }
 
