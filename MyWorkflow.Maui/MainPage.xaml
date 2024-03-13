@@ -11,38 +11,35 @@
             <Label x:Name="lblStatus"></Label>
 
             <HorizontalStackLayout
-                Spacing="5"
-                HeightRequest="45">
+                Spacing="5">
 
-                <Entry
-                    x:Name="entryText"
-                    WidthRequest="200"
-                    VerticalOptions="Center" 
-                    Focused="entryText_Focused"
-                    TextChanged="entryText_TextChanged">
-                </Entry>
-
-                <ImageButton
-                    x:Name="btnBack"
-                    Source="left_arrow.png"
-                    Clicked="btnBack_Clicked" />
-                <ImageButton
+                <Button
                     x:Name="btnSearch"
-                    Source="search.png"
+                    Text="Suchen"
                     Clicked="btnSearch_Clicked" />
-                <ImageButton
+                <Button
+                    x:Name="btnBack"
+                    Text="Zurück"
+                    Clicked="btnBack_Clicked" />
+                <Button
                     x:Name="btnAdd"
-                    Source="plus.png"
+                    Text="Hinzufügen"
                     Clicked="btnAdd_Clicked" />
-                <ImageButton
+                <Button
                     x:Name="btnUpdate"
-                    Source="pen.png"
+                    Text="Ändern"
                     Clicked="btnUpdate_Clicked" />
 
             </HorizontalStackLayout>
 
+            <Entry
+                    x:Name="entryText"
+                    Focused="entryText_Focused"
+                    TextChanged="entryText_TextChanged">
+            </Entry>
+
             <ListView
-                x:Name="myListView" ItemSelected="myListView_ItemSelected">
+                x:Name="myListView" ItemTapped="myListView_ItemTapped">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <TextCell Text="{Binding name}" Detail="{Binding created_at}">

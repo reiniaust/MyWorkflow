@@ -84,6 +84,13 @@ public partial class MainPage : ContentPage
         //Shell.Current.GoToAsync(nameof(MainPage));
     }
 
+    private void myListView_ItemTapped(object sender, ItemTappedEventArgs e)
+    {
+        currentItem = e.Item as MyTask;
+        LoadCurrentList();
+    }
+
+
     private void btnSearch_Clicked(object sender, EventArgs e)
     {
         int i = 0;
@@ -388,7 +395,6 @@ public partial class MainPage : ContentPage
         }
         return path;
     }
-
 
 }
 
