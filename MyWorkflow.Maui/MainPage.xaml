@@ -32,11 +32,16 @@
 
             </HorizontalStackLayout>
 
-            <Entry
-                    x:Name="entryText"
-                    Focused="entryText_Focused"
-                    TextChanged="entryText_TextChanged">
-            </Entry>
+            <HorizontalStackLayout>
+                <Entry
+                        x:Name="entryText"
+                        WidthRequest="400"
+                        Focused="entryText_Focused"
+                        TextChanged="entryText_TextChanged">
+                </Entry>
+    
+                <CheckBox x:Name="checkCompleted" CheckedChanged="checkCompleted_CheckedChanged"></CheckBox>
+            </HorizontalStackLayout>
 
             <ListView
                 x:Name="myListView" ItemTapped="myListView_ItemTapped">

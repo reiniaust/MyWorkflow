@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using MyWorkflow.Maui.Models;
 using System.IO;
 using static System.Net.Mime.MediaTypeNames;
 using Asana.Net;
@@ -74,6 +73,12 @@ public partial class MainPage : ContentPage
             btnAdd.IsEnabled = false;
             btnUpdate.IsEnabled = false;
         }
+    }
+
+    private void checkCompleted_CheckedChanged(object sender, CheckedChangedEventArgs e)
+    {
+        currentItem.completed = checkCompleted.IsChecked;
+        btnUpdate.IsEnabled = true;
     }
 
     private void myListView_ItemSelected(object sender, SelectedItemChangedEventArgs e)
@@ -179,6 +184,8 @@ public partial class MainPage : ContentPage
         currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid));
         myListView.ItemsSource = currentList;
         entryText.Text = currentItem.name;
+        checkCompleted.IsChecked = currentItem.completed;
+
         lblStatus.Text = ItemPath(currentItem);
         if (currentItem.gid != "")
         {
@@ -260,6 +267,7 @@ public partial class MainPage : ContentPage
                     response = await client.GetAsync(request);
                     AsanaTaskResponse taskResponse = JsonSerializer.Deserialize<AsanaTaskResponse>(response.Content);
                     task.created_at = taskResponse.data.created_at;
+                    task.completed = taskResponse.data.completed;
                     task.parentid = rootTask.gid;
                     tasks.Add(task);
                     await ReadSubTasks(task);
@@ -300,6 +308,7 @@ public partial class MainPage : ContentPage
                         response = await client.GetAsync(request);
                         AsanaTaskResponse taskResponse = JsonSerializer.Deserialize<AsanaTaskResponse>(response.Content);
                         subtask.created_at = taskResponse.data.created_at;
+                        task.completed = taskResponse.data.completed;
                         subtask.parentid = task.gid;
                         tasks.Add(subtask);
                         ReadSubTasks(subtask);
@@ -340,7 +349,7 @@ public partial class MainPage : ContentPage
 
         if (operation == "add" || operation == "update")
         {
-            string beginStr = "{\"data\":{\"name\":\"" + task.name;
+            string beginStr = "{\"data\":{\"name\":\"" + task.name + "\",\"completed\":\"" + task.completed;
             if (operation == "add")
             {
                 if (currentItem.name.Contains("AccessToken:"))
