@@ -163,6 +163,7 @@ public partial class MainPage : ContentPage
     private void btnUpdate_Clicked(object sender, EventArgs e)
     {
         currentItem.name = entryText.Text;
+        currentItem.completed = checkCompleted.IsChecked;
         SaveTask("update", currentItem);
     }
 

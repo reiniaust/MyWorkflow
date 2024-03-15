@@ -47,7 +47,7 @@
                 x:Name="myListView" ItemTapped="myListView_ItemTapped">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextCell Text="{Binding name}" Detail="{Binding created_at}">
+                        <TextCell Text="{Binding StatusPlusName}" Detail="{Binding ViewDate}">
                             <TextCell.ContextActions>
                                 <MenuItem 
                                     Text="Löschen"
@@ -56,7 +56,7 @@
                                     />
                             </TextCell.ContextActions>
                         </TextCell>
-                    </DataTemplate>
+                </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
 
