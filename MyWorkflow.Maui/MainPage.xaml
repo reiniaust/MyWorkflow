@@ -39,7 +39,9 @@
                         Focused="entryText_Focused"
                         TextChanged="entryText_TextChanged">
                 </Entry>
-    
+
+                <DatePicker x:Name="datePick_Due_on" DateSelected="datePick_Due_on_DateSelected"></DatePicker>
+                
                 <CheckBox x:Name="checkCompleted" CheckedChanged="checkCompleted_CheckedChanged"></CheckBox>
             </HorizontalStackLayout>
 

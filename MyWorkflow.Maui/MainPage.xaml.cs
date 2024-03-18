@@ -44,13 +44,7 @@ public partial class MainPage : ContentPage
             tasks.Add(currentItem);
         }
 
-        // Asana Tasks löschen
-        tasks = tasks.Where(x => x.gid.Length <= idTo.ToString().Length).ToList();
-
-        foreach (var task in tasks.Where(x => x.name != null && x.name.Contains("AccessToken:")))
-        {
-            ReadAsana(task);
-        }
+        ReadAllAssana();
 
         LoadCurrentList();
 	}
@@ -75,18 +69,16 @@ public partial class MainPage : ContentPage
         }
     }
 
+    private void datePick_Due_on_DateSelected(object sender, DateChangedEventArgs e)
+    {
+        currentItem.due_on = datePick_Due_on.Date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'");
+        btnUpdate.IsEnabled = true;
+    }
+
     private void checkCompleted_CheckedChanged(object sender, CheckedChangedEventArgs e)
     {
         currentItem.completed = checkCompleted.IsChecked;
         btnUpdate.IsEnabled = true;
-    }
-
-    private void myListView_ItemSelected(object sender, SelectedItemChangedEventArgs e)
-    {
-        currentItem = e.SelectedItem as MyTask;
-        LoadCurrentList();
-
-        //Shell.Current.GoToAsync(nameof(MainPage));
     }
 
     private void myListView_ItemTapped(object sender, ItemTappedEventArgs e)
@@ -163,7 +155,6 @@ public partial class MainPage : ContentPage
     private void btnUpdate_Clicked(object sender, EventArgs e)
     {
         currentItem.name = entryText.Text;
-        currentItem.completed = checkCompleted.IsChecked;
         SaveTask("update", currentItem);
     }
 
@@ -180,11 +171,29 @@ public partial class MainPage : ContentPage
         }
     }
 
+    void ReadAllAssana()
+    {
+        // Asana Tasks löschen
+        tasks = tasks.Where(x => x.gid.Length <= idTo.ToString().Length).ToList();
+        foreach (var task in tasks.Where(x => x.name != null && x.name.Contains("AccessToken:")))
+        {
+            ReadAsana(task);
+        }
+    }
     private void LoadCurrentList()
     {
-        currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid));
+
+        currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.due_on));
         myListView.ItemsSource = currentList;
         entryText.Text = currentItem.name;
+        if (currentItem.due_on != null)
+        {
+            datePick_Due_on.Date = DateTime.Parse(currentItem.due_on);
+        } 
+        else
+        {
+            datePick_Due_on.Date = DateTime.Today;
+        }
         checkCompleted.IsChecked = currentItem.completed;
 
         lblStatus.Text = ItemPath(currentItem);
@@ -268,6 +277,7 @@ public partial class MainPage : ContentPage
                     response = await client.GetAsync(request);
                     AsanaTaskResponse taskResponse = JsonSerializer.Deserialize<AsanaTaskResponse>(response.Content);
                     task.created_at = taskResponse.data.created_at;
+                    task.due_on = taskResponse.data.due_on;
                     task.completed = taskResponse.data.completed;
                     task.parentid = rootTask.gid;
                     tasks.Add(task);
@@ -309,6 +319,7 @@ public partial class MainPage : ContentPage
                         response = await client.GetAsync(request);
                         AsanaTaskResponse taskResponse = JsonSerializer.Deserialize<AsanaTaskResponse>(response.Content);
                         subtask.created_at = taskResponse.data.created_at;
+                        task.due_on = taskResponse.data.due_on;
                         task.completed = taskResponse.data.completed;
                         subtask.parentid = task.gid;
                         tasks.Add(subtask);
@@ -350,7 +361,7 @@ public partial class MainPage : ContentPage
 
         if (operation == "add" || operation == "update")
         {
-            string beginStr = "{\"data\":{\"name\":\"" + task.name + "\",\"completed\":\"" + task.completed;
+            string beginStr = "{\"data\":{\"name\":\"" + task.name + "\",\"due_on\":\"" + task.due_on + "\",\"completed\":\"" + task.completed;
             if (operation == "add")
             {
                 if (currentItem.name.Contains("AccessToken:"))
@@ -374,6 +385,11 @@ public partial class MainPage : ContentPage
             if (!response.IsSuccessful)
             {
                 lblStatus.Text = response.Content.ToString();
+            }
+            else
+            {
+                AsanaTaskResponse taskResponse = JsonSerializer.Deserialize<AsanaTaskResponse>(response.Content);
+                task.gid = taskResponse.data.gid;
             }
         }
         if (operation == "update")

@@ -14,6 +14,7 @@ namespace MyWorkflow.Maui
         public string name { get; set; }
         // Add additional properties as needed
         public string created_at { get; set; }
+        public string due_on { get; set; }
         public bool completed { get; set; }
         public string StatusPlusName
         {
@@ -26,21 +27,21 @@ namespace MyWorkflow.Maui
         {
             get
             {
-                string strDate = "";
+                string returnDate = "";
                 if (!string.IsNullOrEmpty(created_at))
                 {
                     if (created_at.Contains("-"))
                     {
                         DateTime utcDateTime = DateTime.Parse(created_at, null, DateTimeStyles.RoundtripKind); // Parse with UTC kind
                         DateTime convertedDateTime = DateTime.SpecifyKind(utcDateTime, DateTimeKind.Utc);
-                        strDate = convertedDateTime.ToString();
+                        returnDate = convertedDateTime.ToString();
                     } else
                     {
-                        strDate = created_at;
+                        returnDate = created_at;
                     }
-                    strDate = strDate.Substring(0, 16);
+                    returnDate = returnDate.Substring(0, 16);
                 } 
-                return strDate;
+                return returnDate;
             }
         }
 
