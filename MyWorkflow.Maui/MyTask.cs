@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -23,26 +24,54 @@ namespace MyWorkflow.Maui
             }
         }
 
+        public string Color
+        {
+            get { return "Red"; }
+        }
+
+
         public string ViewDate
         {
             get
             {
-                string returnDate = "";
-                if (!string.IsNullOrEmpty(created_at))
-                {
-                    if (created_at.Contains("-"))
-                    {
-                        DateTime utcDateTime = DateTime.Parse(created_at, null, DateTimeStyles.RoundtripKind); // Parse with UTC kind
-                        DateTime convertedDateTime = DateTime.SpecifyKind(utcDateTime, DateTimeKind.Utc);
-                        returnDate = convertedDateTime.ToString();
-                    } else
-                    {
-                        returnDate = created_at;
-                    }
-                    returnDate = returnDate.Substring(0, 16);
-                } 
-                return returnDate;
+                return LocalDateString(created_at);
             }
+        }
+
+        public string AppointmentString
+        {
+            get
+            {
+                if (due_on != null)
+                {
+                    return "Termin: " + LocalDateString(due_on);
+                }
+                else
+                {
+                    return "";
+                }
+            }
+        }
+
+
+        string LocalDateString(string dateString)
+        {
+            string returnDate = "";
+            if (!string.IsNullOrEmpty(dateString))
+            {
+                if (dateString.Contains("-"))
+                {
+                    DateTime utcDateTime = DateTime.Parse(dateString, null, DateTimeStyles.RoundtripKind); // Parse with UTC kind
+                    DateTime convertedDateTime = DateTime.SpecifyKind(utcDateTime, DateTimeKind.Utc);
+                    returnDate = convertedDateTime.ToString();
+                }
+                else
+                {
+                    returnDate = dateString;
+                }
+                returnDate = returnDate.Substring(0, 16);
+            }
+            return returnDate;
         }
 
 

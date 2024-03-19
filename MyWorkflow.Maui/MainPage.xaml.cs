@@ -15,6 +15,7 @@ public partial class MainPage : ContentPage
     List<MyTask> tasks;
     string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     string jsonString;
+    MyTask rootItem;
     MyTask currentItem;
     ObservableCollection<MyTask> currentList;
     Random random = new Random();
@@ -22,6 +23,7 @@ public partial class MainPage : ContentPage
     int idTo = 999999999;
     string searchText = "";
     int searchCounter = 0;
+    bool isRefresh;
 
     public MainPage()
 	{
@@ -43,6 +45,7 @@ public partial class MainPage : ContentPage
             currentItem = new MyTask() { gid = "" };
             tasks.Add(currentItem);
         }
+        rootItem = currentItem;
 
         ReadAllAssana();
 
@@ -71,8 +74,15 @@ public partial class MainPage : ContentPage
 
     private void datePick_Due_on_DateSelected(object sender, DateChangedEventArgs e)
     {
-        currentItem.due_on = datePick_Due_on.Date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'");
-        btnUpdate.IsEnabled = true;
+        if (!isRefresh)
+        {
+            currentItem.due_on = datePick_Due_on.Date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'");
+            btnUpdate.IsEnabled = true;
+        }
+        else
+        {
+            isRefresh = false;
+        }
     }
 
     private void checkCompleted_CheckedChanged(object sender, CheckedChangedEventArgs e)
@@ -182,10 +192,12 @@ public partial class MainPage : ContentPage
     }
     private void LoadCurrentList()
     {
+        GetNextDateFromItems(rootItem);
 
         currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.due_on));
         myListView.ItemsSource = currentList;
         entryText.Text = currentItem.name;
+        isRefresh = true;
         if (currentItem.due_on != null)
         {
             datePick_Due_on.Date = DateTime.Parse(currentItem.due_on);
@@ -422,5 +434,26 @@ public partial class MainPage : ContentPage
         return path;
     }
 
+    void GetNextDateFromItems(MyTask item)
+    {
+        foreach (var subItem in tasks.Where(x => x.parentid == item.gid))
+        {
+            GetNextDateFromItems(subItem);
+            if (!subItem.completed && subItem.due_on != null)
+            {
+                if (item.due_on == null)
+                {
+                    item.due_on = subItem.due_on;
+                }
+                else
+                {
+                    if (DateTime.Parse(subItem.due_on) < DateTime.Parse(item.due_on))
+                    {
+                        item.due_on = subItem.due_on;
+                    }
+                }
+            }
+        }
+    }
 }
 
