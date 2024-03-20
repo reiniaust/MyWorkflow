@@ -15,6 +15,7 @@ namespace MyWorkflow.Maui
         public string name { get; set; }
         // Add additional properties as needed
         public string created_at { get; set; }
+        public string modified_at { get; set; }
         public string due_on { get; set; }
         public bool completed { get; set; }
         public string StatusPlusName
@@ -29,30 +30,62 @@ namespace MyWorkflow.Maui
             get { return "Red"; }
         }
 
-
+        public string OrderDate
+        {
+            get
+            {
+                if (completed)
+                {
+                    return modified_at;
+                }
+                else
+                {
+                    if (due_on != null)
+                    {
+                        return due_on;
+                    }
+                    else
+                    {
+                        if (modified_at == null)
+                        {
+                            return created_at;
+                        }
+                        else
+                        {
+                            return modified_at;
+                        }
+                    }
+                }
+            }
+        }
         public string ViewDate
         {
             get
             {
-                return LocalDateString(created_at);
-            }
-        }
-
-        public string AppointmentString
-        {
-            get
-            {
-                if (due_on != null)
+                if (completed)
                 {
-                    return "Termin: " + LocalDateString(due_on);
+                    return "Erledigt: " + LocalDateString(modified_at);
                 }
                 else
                 {
-                    return "";
+                    if (due_on != null)
+                    {
+                        return "Termin: " + LocalDateString(due_on) + " (" + LocalDateString(modified_at) + ")";
+                    }
+                    else
+                    {
+                        if (modified_at == null)
+                        {
+                            return "Ertstellt: " + LocalDateString(created_at);
+                        }
+                        else
+                        {
+                            return "Geändert: " + LocalDateString(modified_at);
+                        }
+                    }
                 }
             }
         }
-
 
         string LocalDateString(string dateString)
         {

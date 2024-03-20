@@ -102,7 +102,7 @@ public partial class MainPage : ContentPage
     {
         int i = 0;
         foreach (var task in tasks.Where(x => isSearchInTitem(x))
-            .OrderByDescending(x => x.created_at))
+            .OrderByDescending(x => x.modified_at == null ? x.created_at : x.modified_at))
         {
             if (i == searchCounter)
             {
@@ -165,6 +165,7 @@ public partial class MainPage : ContentPage
     private void btnUpdate_Clicked(object sender, EventArgs e)
     {
         currentItem.name = entryText.Text;
+        currentItem.modified_at = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss", CultureInfo.InvariantCulture);
         SaveTask("update", currentItem);
     }
 
@@ -194,7 +195,7 @@ public partial class MainPage : ContentPage
     {
         GetNextDateFromItems(rootItem);
 
-        currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.due_on));
+        currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.OrderDate));
         myListView.ItemsSource = currentList;
         entryText.Text = currentItem.name;
         isRefresh = true;
@@ -242,6 +243,7 @@ public partial class MainPage : ContentPage
     private void SaveItems()
     {
         File.WriteAllText(Path.Combine(docPath, "MyWorkflowData.json"), JsonSerializer.Serialize(tasks));
+        File.WriteAllText(Path.Combine(docPath, "MyWorkflowData" + DateTime.Today.ToString() +".json"), JsonSerializer.Serialize(tasks));
     }
 
     private void entryText_Focused(object sender, FocusEventArgs e)
@@ -289,6 +291,7 @@ public partial class MainPage : ContentPage
                     response = await client.GetAsync(request);
                     AsanaTaskResponse taskResponse = JsonSerializer.Deserialize<AsanaTaskResponse>(response.Content);
                     task.created_at = taskResponse.data.created_at;
+                    task.modified_at = taskResponse.data.modified_at;
                     task.due_on = taskResponse.data.due_on;
                     task.completed = taskResponse.data.completed;
                     task.parentid = rootTask.gid;
@@ -331,6 +334,7 @@ public partial class MainPage : ContentPage
                         response = await client.GetAsync(request);
                         AsanaTaskResponse taskResponse = JsonSerializer.Deserialize<AsanaTaskResponse>(response.Content);
                         subtask.created_at = taskResponse.data.created_at;
+                        subtask.modified_at = taskResponse.data.modified_at;
                         task.due_on = taskResponse.data.due_on;
                         task.completed = taskResponse.data.completed;
                         subtask.parentid = task.gid;
