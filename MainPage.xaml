@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MyWorkflow.MainPage">
+
+    <ScrollView>
+        <VerticalStackLayout 
+            Spacing="10"
+            Padding="10">
+
+            <Label x:Name="lblStatus"></Label>
+
+            <HorizontalStackLayout
+                Spacing="5">
+
+                <Button
+                    x:Name="btnHome"
+                    ImageSource="home.png"
+                    Clicked="btnHome_Clicked" />
+                <Button
+                    x:Name="btnBack"
+                    ImageSource="arrow_back.png"
+                    Clicked="btnBack_Clicked" />
+                <Button
+                    x:Name="btnSearch"
+                    ImageSource="search.png"
+                    Clicked="btnSearch_Clicked" />
+                <Button
+                    x:Name="btnAdd"
+                    ImageSource="add.png"
+                    Clicked="btnAdd_Clicked" />
+                <Button
+                    x:Name="btnUpdate"
+                    ImageSource="edit.png"
+                    Clicked="btnUpdate_Clicked" />
+
+            </HorizontalStackLayout>
+
+            <Entry
+                    x:Name="entryText"
+                    Placeholder="Titel"
+                    Focused="entryText_Focused"
+                    TextChanged="entryText_TextChanged">
+            </Entry>
+
+            <Editor
+                x:Name="editorNotes"
+                Placeholder="Beschreibung"
+                TextChanged="editorNotes_TextChanged"
+                MaximumHeightRequest="100">
+            </Editor>
+
+            <HorizontalStackLayout Spacing="5">
+
+                <Label Text="Termin:" VerticalTextAlignment="Center"></Label>
+                <Entry x:Name="entry_Due_on"></Entry>
+                <DatePicker x:Name="datePick_Due_on" DateSelected="datePick_Due_on_DateSelected"></DatePicker>
+
+                <Label Text="Erledigt:" VerticalTextAlignment="Center"></Label>
+                <CheckBox x:Name="checkCompleted" CheckedChanged="checkCompleted_CheckedChanged"></CheckBox>
+            
+            </HorizontalStackLayout>
+
+            <ListView
+                x:Name="myListView" ItemTapped="myListView_ItemTapped">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextCell Text="{Binding NameInList}" Detail="{Binding ViewDate}" TextColor="{Binding Color}">
+                            <TextCell.ContextActions>
+                                <MenuItem 
+                                    Text="Löschen"
+                                    CommandParameter="{Binding .}"
+                                    Clicked="Delete_Clicked"
+                                    />
+                            </TextCell.ContextActions>
+                        </TextCell>
+                </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
