@@ -33,6 +33,10 @@
                     x:Name="btnUpdate"
                     ImageSource="edit.png"
                     Clicked="btnUpdate_Clicked" />
+                <Button
+                    x:Name="btnDelete"
+                    ImageSource="delete.png"
+                    Clicked="btnDelete_Clicked" />
 
             </HorizontalStackLayout>
 
@@ -66,13 +70,6 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <TextCell Text="{Binding NameInList}" Detail="{Binding ViewDate}" TextColor="{Binding Color}">
-                            <TextCell.ContextActions>
-                                <MenuItem 
-                                    Text="Löschen"
-                                    CommandParameter="{Binding .}"
-                                    Clicked="Delete_Clicked"
-                                    />
-                            </TextCell.ContextActions>
                         </TextCell>
                 </DataTemplate>
                 </ListView.ItemTemplate>

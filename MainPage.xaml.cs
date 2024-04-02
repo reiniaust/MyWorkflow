@@ -24,6 +24,7 @@ public partial class MainPage : ContentPage
     int idTo = 999999999;
     string searchText = "";
     int searchCounter = 0;
+    bool deleteConfirmed;
     //bool isRefresh;
 
     public MainPage()
@@ -200,6 +201,21 @@ public partial class MainPage : ContentPage
         SaveTask("update", currentItem);
     }
 
+    private void btnDelete_Clicked(object sender, EventArgs e)
+    {
+        if (deleteConfirmed)
+        {
+            tasks.Remove(currentItem);
+            SaveTask("delete", currentItem);
+        }
+        else
+        {
+            lblStatus.Text = "Zur Bestätigung erneut Löschen anwählen.";
+            deleteConfirmed = true;
+        }
+    }
+
+
     private void setItem(MyTask item)
     {
         /*
@@ -221,18 +237,6 @@ public partial class MainPage : ContentPage
         }
     }
 
-
-    private void Delete_Clicked(object sender, EventArgs e)
-    {
-        var menuItem = sender as MenuItem;
-        MyTask item = menuItem.CommandParameter as MyTask;
-        item = tasks.Find(x => x.gid == item.gid);
-        if (item != null)
-        {
-            tasks.Remove(item);
-            SaveTask("delete", item);
-        }
-    }
 
     private void StartUp()
     {
@@ -271,6 +275,7 @@ public partial class MainPage : ContentPage
     }
     private void LoadCurrentList()
     {
+        deleteConfirmed = false;
         tasks.ForEach(x => x.next_due_on = null);
         GetNextDateFromItems(rootItem);
 
@@ -324,7 +329,7 @@ public partial class MainPage : ContentPage
             SaveAsanaTask(operation, item);
         }
 
-        if (operation == "update")
+        if (operation == "update" || operation == "delete")
         {
             if (currentItem.gid != "")
             {
