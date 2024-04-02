@@ -69,8 +69,18 @@
                 x:Name="myListView" ItemTapped="myListView_ItemTapped">
                 <ListView.ItemTemplate>
                     <DataTemplate>
+                        <ViewCell>
+                            <VerticalStackLayout>
+                                <Label 
+                                    Text="{Binding NameInList}" />
+                                <Label 
+                                    Text="{Binding ViewDate}" TextColor="{Binding DueDateColor}"/>
+                            </VerticalStackLayout>
+                        </ViewCell>
+                        <!-- 
                         <TextCell Text="{Binding NameInList}" Detail="{Binding ViewDate}" TextColor="{Binding Color}">
                         </TextCell>
+                        -->
                 </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

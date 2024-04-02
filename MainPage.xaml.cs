@@ -282,7 +282,7 @@ public partial class MainPage : ContentPage
         currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.OrderDate));
         foreach (var task in currentList)
         {
-            if (tasks.Find(x => x.parentid == task.gid) != null)
+            if (task.notes != null || tasks.Find(x => x.parentid == task.gid) != null)
             {
                 task.NameInList = "+ " + task.name;
             }

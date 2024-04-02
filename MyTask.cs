@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Maui.Graphics;
 
 namespace MyWorkflow
 {
@@ -20,20 +20,32 @@ namespace MyWorkflow
         public string due_on { get; set; }
         public string next_due_on { get; set; }
         public bool completed { get; set; }
-        /*
-        public string StatusPlusName
-        {
-            get { 
-                return completed == true ? "Erledigt: " + name : name; 
-            }
-        }
-        */
 
         public string NameInList { get; set; }
 
-        public string Color
+        public Color DueDateColor
         {
-            get { return "Red"; }
+            get {
+                Color color = Colors.Black;
+                if (next_due_on != null && !completed)
+                {
+                    DateTime dueDate = DateTime.Parse(next_due_on);
+                        if (dueDate < DateTime.Today)
+                            color = Colors.Red;
+                        else
+                            if (dueDate.Date == DateTime.Today)
+                                color = Colors.Orange;
+                            else
+                                if (dueDate.Date == DateTime.Today.AddDays(1))
+                                    color = Colors.Yellow;
+                                else
+                                    if (dueDate.Date == DateTime.Today.AddDays(2))
+                                        color = Colors.Green;
+                                    else
+                                        color = Colors.Blue;
+                }
+                return color;
+            }
         }
 
         public string OrderDate
@@ -41,27 +53,15 @@ namespace MyWorkflow
             get
             {
                 if (completed)
-                {
                     return modified_at;
-                }
                 else
-                {
-                    if (due_on != null)
-                    {
+                    if (next_due_on != null)
                         return next_due_on;
-                    }
                     else
-                    {
                         if (modified_at == null)
-                        {
                             return created_at;
-                        }
                         else
-                        {
                             return modified_at;
-                        }
-                    }
-                }
             }
         }
         public string ViewDate
@@ -82,7 +82,7 @@ namespace MyWorkflow
                     {
                         if (modified_at == null)
                         {
-                            return "Ertstellt: " + LocalDateString(created_at);
+                            return LocalDateString(created_at);
                         }
                         else
                         {
