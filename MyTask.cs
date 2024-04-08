@@ -20,29 +20,36 @@ namespace MyWorkflow
         public string due_on { get; set; }
         public string next_due_on { get; set; }
         public bool completed { get; set; }
-
+        public List<string> dependencies { get; set; } = new List<string>(); 
         public string NameInList { get; set; }
 
         public Color DueDateColor
         {
             get {
-                Color color = Colors.Black;
-                if (next_due_on != null && !completed)
+                Color color = Colors.White;
+                if (completed)
+                {  
+                    color = Colors.Black; 
+                }
+                else
                 {
-                    DateTime dueDate = DateTime.Parse(next_due_on);
-                        if (dueDate < DateTime.Today)
-                            color = Colors.Red;
-                        else
-                            if (dueDate.Date == DateTime.Today)
-                                color = Colors.Orange;
+                    if (next_due_on != null && !completed)
+                    {
+                        DateTime dueDate = DateTime.Parse(next_due_on);
+                            if (dueDate < DateTime.Today)
+                                color = Colors.Red;
                             else
-                                if (dueDate.Date == DateTime.Today.AddDays(1))
-                                    color = Colors.Yellow;
+                                if (dueDate.Date == DateTime.Today)
+                                    color = Colors.Orange;
                                 else
-                                    if (dueDate.Date == DateTime.Today.AddDays(2))
-                                        color = Colors.Green;
+                                    if (dueDate.Date == DateTime.Today.AddDays(1))
+                                        color = Colors.Yellow;
                                     else
-                                        color = Colors.Blue;
+                                        if (dueDate.Date == DateTime.Today.AddDays(2))
+                                            color = Colors.Green;
+                                        else
+                                            color = Colors.Blue;
+                    }
                 }
                 return color;
             }

@@ -1,7 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="MyWorkflow.MainPage">
+             x:Class="MyWorkflow.MainPage"> 
+             <!--
+            xmlns:editors="clr-namespace:Syncfusion.Maui.Inputs;assembly=Syncfusion.Maui.Inputs"
+            -->
 
     <ScrollView>
         <VerticalStackLayout 
@@ -14,9 +17,9 @@
                 Spacing="5">
 
                 <Button
-                    x:Name="btnHome"
-                    ImageSource="home.png"
-                    Clicked="btnHome_Clicked" />
+                    x:Name="btnRefresh"
+                    ImageSource="refresh.png"
+                    Clicked="btnRefresh_Clicked" />
                 <Button
                     x:Name="btnBack"
                     ImageSource="arrow_back.png"
@@ -34,6 +37,47 @@
                     ImageSource="edit.png"
                     Clicked="btnUpdate_Clicked" />
                 <Button
+                    x:Name="btnSave"
+                    ImageSource="save.png"
+                    Clicked="btnSave_Clicked" />
+                <Button
+                    x:Name="btnCancel"
+                    ImageSource="cancel.png"
+                    Clicked="btnCancel_Clicked" />
+                <Button
+                    x:Name="btnExpandMore"
+                    ImageSource="expand_more.png"
+                    Clicked="btnExpandMore_Clicked" />
+                <Button
+                    x:Name="btnExpandLess"
+                    IsVisible="false"
+                    ImageSource="expand_less.png"
+                    Clicked="btnExpandLess_Clicked" />
+
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout 
+                x:Name="stackMoreButtons"
+                IsVisible="false"
+                Spacing="5">
+
+                <Button
+                    x:Name="btnCut"
+                    ImageSource="cut.png"
+                    Clicked="btnCut_Clicked" />
+                <Button
+                    x:Name="btnAddLink"
+                    ImageSource="add_link.png"
+                    Clicked="btnAddLink_Clicked" />
+                <Button
+                    x:Name="btnDeleteLink"
+                    ImageSource="link_off.png"
+                    Clicked="btnDeleteLink_Clicked" />
+                <Button
+                    x:Name="btnPaste"
+                    ImageSource="paste.png"
+                    Clicked="btnPaste_Clicked" />
+                <Button
                     x:Name="btnDelete"
                     ImageSource="delete.png"
                     Clicked="btnDelete_Clicked" />
@@ -49,21 +93,57 @@
 
             <Editor
                 x:Name="editorNotes"
-                Placeholder="Beschreibung"
-                TextChanged="editorNotes_TextChanged"
-                MaximumHeightRequest="100">
-            </Editor>
+                Placeholder="Inhalt"
+                AutoSize="TextChanges"/>
 
             <HorizontalStackLayout Spacing="5">
-
-                <Label Text="Termin:" VerticalTextAlignment="Center"></Label>
+                <Label Text="Termin:" VerticalTextAlignment="Center"/>
                 <Entry x:Name="entry_Due_on"></Entry>
-                <DatePicker x:Name="datePick_Due_on" DateSelected="datePick_Due_on_DateSelected"></DatePicker>
+                <DatePicker x:Name="datePick_Due_on" DateSelected="datePick_Due_on_DateSelected"/>
 
-                <Label Text="Erledigt:" VerticalTextAlignment="Center"></Label>
-                <CheckBox x:Name="checkCompleted" CheckedChanged="checkCompleted_CheckedChanged"></CheckBox>
-            
+                <Label Text="Erledigt:" VerticalTextAlignment="Center"/>
+                <CheckBox x:Name="checkCompleted" CheckedChanged="checkCompleted_CheckedChanged"/>
             </HorizontalStackLayout>
+            
+            <Label x:Name="lblDepend" Text="Ist abhängig von:"/>
+            <ListView
+                x:Name="listViewDepend" ItemTapped="myListView_ItemTapped">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <VerticalStackLayout>
+                                <Label 
+                                    Text="{Binding name}" 
+                                    FontAttributes="Bold" />
+                                <HorizontalStackLayout Spacing="5">
+                                    <Label HeightRequest="10" WidthRequest="10" BackgroundColor="{Binding DueDateColor}"/>
+                                    <Label Text="{Binding ViewDate}" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <Label x:Name="lblDependTo" Text="Hiervon abhängig:"/>
+            <ListView
+                x:Name="listViewDependTo" ItemTapped="myListView_ItemTapped">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <VerticalStackLayout>
+                                <Label 
+                                    Text="{Binding name}" 
+                                    FontAttributes="Bold" />
+                                <HorizontalStackLayout Spacing="5">
+                                    <Label HeightRequest="10" WidthRequest="10" BackgroundColor="{Binding DueDateColor}"/>
+                                    <Label Text="{Binding ViewDate}" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
 
             <ListView
                 x:Name="myListView" ItemTapped="myListView_ItemTapped">
@@ -72,9 +152,12 @@
                         <ViewCell>
                             <VerticalStackLayout>
                                 <Label 
-                                    Text="{Binding NameInList}" />
-                                <Label 
-                                    Text="{Binding ViewDate}" TextColor="{Binding DueDateColor}"/>
+                                    Text="{Binding NameInList}" 
+                                    FontAttributes="Bold" />
+                                <HorizontalStackLayout Spacing="5">
+                                    <Label HeightRequest="10" WidthRequest="10" BackgroundColor="{Binding DueDateColor}"/>
+                                    <Label Text="{Binding ViewDate}" />
+                                </HorizontalStackLayout>
                             </VerticalStackLayout>
                         </ViewCell>
                         <!-- 

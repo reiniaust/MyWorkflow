@@ -31,10 +31,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- App Icon -->
+		<!-- App Icon 
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+		-->
+		<MauiIcon Include="Resources\AppIcon\myw.png" ForegroundFile="Resources\AppIcon\myw.png" />
 
-		<!-- Splash Screen -->
+		<!-- Splash Screen 
+		-->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 
 		<!-- Images -->
@@ -49,10 +52,19 @@
 
 	<ItemGroup>
 	  <None Remove="Resources\Images\add.png" />
+	  <None Remove="Resources\Images\add_link.png" />
 	  <None Remove="Resources\Images\arrow_back.png" />
+	  <None Remove="Resources\Images\cancel.png" />
+	  <None Remove="Resources\Images\cut.png" />
 	  <None Remove="Resources\Images\delete.png" />
 	  <None Remove="Resources\Images\edit.png" />
+	  <None Remove="Resources\Images\expand_less.png" />
+	  <None Remove="Resources\Images\expand_more.png" />
 	  <None Remove="Resources\Images\home.png" />
+	  <None Remove="Resources\Images\link_off.png" />
+	  <None Remove="Resources\Images\paste.png" />
+	  <None Remove="Resources\Images\refresh.png" />
+	  <None Remove="Resources\Images\save.png" />
 	  <None Remove="Resources\Images\search.png" />
 	</ItemGroup>
 
