@@ -33,7 +33,9 @@ public partial class MainPage : ContentPage
     //bool isRefresh;
     List<DependenceItem> depList = new List<DependenceItem>();
     //List<SfComboBox> depComboList = new List<SfComboBox>();   
-    bool editStatus; 
+    bool editStatus;
+    bool loadStatus;
+
     public MainPage()
 	{
 		InitializeComponent();
@@ -51,17 +53,22 @@ public partial class MainPage : ContentPage
             searchCounter = 0;
         }
     }
+
+    private void editorNotes_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        setEditStatus();
+    }
+
     private void datePick_Due_on_DateSelected(object sender, DateChangedEventArgs e)
     {
         entry_Due_on.Text = datePick_Due_on.Date.ToString();
         entry_Due_on.Text = entry_Due_on.Text.Substring(0, entry_Due_on.Text.Length - 3) ; // Sekunden von Datum/Uhrzeit abschneiden
+        setEditStatus();
     }
 
     private void checkCompleted_CheckedChanged(object sender, CheckedChangedEventArgs e)
     {
-        editStatus = true;
-        operation = "update";
-        setButtonStatus();
+        setEditStatus();
     }
 
     private void myListView_ItemTapped(object sender, ItemTappedEventArgs e)
@@ -225,6 +232,12 @@ public partial class MainPage : ContentPage
             setItem(item);
             item.modified_at = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss", CultureInfo.InvariantCulture);
         }
+
+        if (item.notes != null && item.notes.Contains("TaskId"))
+        {
+            item.gid = item.notes.Split("TaskId: ")[1];
+        }
+
         if (operation == "delete")
         {
             item = currentItem;
@@ -305,6 +318,16 @@ public partial class MainPage : ContentPage
         }
         btnPaste.IsVisible = false;
         SaveTask("update", item);
+    }
+
+    void setEditStatus()
+    {
+        if (!editStatus && !loadStatus)
+        {
+            editStatus = true;
+            operation = "update";
+            setButtonStatus();
+        }
     }
 
     void setButtonStatus()
@@ -407,7 +430,7 @@ public partial class MainPage : ContentPage
     void ReadAllAssana()
     {
         // Asana Tasks löschen
-        tasks = tasks.Where(x => x.gid.Length <= idTo.ToString().Length).ToList();
+        tasks = tasks.Where(x => x.gid.Length <= idTo.ToString().Length || x.parentid == "").ToList();
         foreach (var task in tasks.Where(x => x.notes != null && x.notes.Contains("AccessToken:")))
         {
             ReadAsana(task);
@@ -415,6 +438,8 @@ public partial class MainPage : ContentPage
     }
     private void LoadCurrentList()
     {
+        loadStatus = true;
+
         tasks.ForEach(x =>
         {
             if (x.name == null) x.name = "";
@@ -484,7 +509,7 @@ public partial class MainPage : ContentPage
         currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.OrderDate));
         foreach (var task in currentList)
         {
-            if (task.notes != null || tasks.Find(x => x.parentid == task.gid) != null)
+            if (task.notes != null && task.notes != "" || tasks.Find(x => x.parentid == task.gid) != null)
             {
                 task.NameInList = "+ " + task.name;
             }
@@ -516,6 +541,7 @@ public partial class MainPage : ContentPage
             btnBack.IsEnabled = true;
         }
         //editorNotes.Focus();
+        loadStatus = false;
     }
 
     private void SaveTask(string operation, MyTask item)
@@ -571,8 +597,11 @@ public partial class MainPage : ContentPage
         }
         else
         {
-            taskId = rootTask.notes.Split("TaskId: ")[1];
-            options = new RestClientOptions($"https://app.asana.com/api/1.0/tasks/{taskId}");
+            if (rootTask.notes.Contains("TaskId"))
+            {
+                taskId = rootTask.notes.Split("TaskId: ")[1];
+                options = new RestClientOptions($"https://app.asana.com/api/1.0/tasks/{taskId}");
+            }
         }
 
         var client = new RestClient(options);

@@ -94,6 +94,7 @@
             <Editor
                 x:Name="editorNotes"
                 Placeholder="Inhalt"
+                TextChanged="editorNotes_TextChanged"
                 AutoSize="TextChanges"/>
 
             <HorizontalStackLayout Spacing="5">
