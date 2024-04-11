@@ -107,7 +107,7 @@
             </HorizontalStackLayout>
             
             <Label x:Name="lblDepend" Text="Ist abhängig von:"/>
-            <ListView
+            <ListView Margin="20,0,0,0"
                 x:Name="listViewDepend" ItemTapped="myListView_ItemTapped">
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -127,7 +127,7 @@
             </ListView>
 
             <Label x:Name="lblDependTo" Text="Hiervon abhängig:"/>
-            <ListView
+            <ListView Margin="20,0,0,0"
                 x:Name="listViewDependTo" ItemTapped="myListView_ItemTapped">
                 <ListView.ItemTemplate>
                     <DataTemplate>

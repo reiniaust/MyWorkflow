@@ -233,7 +233,7 @@ public partial class MainPage : ContentPage
             item.modified_at = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss", CultureInfo.InvariantCulture);
         }
 
-        if (item.notes != null && item.notes.Contains("TaskId"))
+        if (item != null && item.notes != null && item.notes.Contains("TaskId"))
         {
             item.gid = item.notes.Split("TaskId: ")[1];
         }
