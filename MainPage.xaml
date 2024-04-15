@@ -7,167 +7,186 @@
             -->
 
     <ScrollView>
-        <VerticalStackLayout 
+        <VerticalStackLayout>
+            <VerticalStackLayout 
+                x:Name="startEamilView"
+                Spacing="10"
+                Padding="10">
+
+                <Entry
+                    x:Name="entryEmail"
+                    Placeholder="Eigene E-Mail-Adresse" />
+
+                <Button
+                    x:Name="btnSaveEmail"
+                    ImageSource="save.png"
+                    Clicked="btnSaveEmail_Clicked" />
+                
+            </VerticalStackLayout>
+
+            <VerticalStackLayout 
+            x:Name="mainView"
             Spacing="10"
             Padding="10">
 
-            <Label x:Name="lblStatus"></Label>
+                <Label x:Name="lblStatus"></Label>
 
-            <HorizontalStackLayout
+                <HorizontalStackLayout
                 Spacing="5">
 
-                <Button
+                    <Button
                     x:Name="btnRefresh"
                     ImageSource="refresh.png"
                     Clicked="btnRefresh_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnBack"
                     ImageSource="arrow_back.png"
                     Clicked="btnBack_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnSearch"
                     ImageSource="search.png"
                     Clicked="btnSearch_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnAdd"
                     ImageSource="add.png"
                     Clicked="btnAdd_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnUpdate"
                     ImageSource="edit.png"
                     Clicked="btnUpdate_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnSave"
                     ImageSource="save.png"
                     Clicked="btnSave_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnCancel"
                     ImageSource="cancel.png"
                     Clicked="btnCancel_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnExpandMore"
                     ImageSource="expand_more.png"
                     Clicked="btnExpandMore_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnExpandLess"
                     IsVisible="false"
                     ImageSource="expand_less.png"
                     Clicked="btnExpandLess_Clicked" />
 
-            </HorizontalStackLayout>
+                </HorizontalStackLayout>
 
-            <HorizontalStackLayout 
+                <HorizontalStackLayout 
                 x:Name="stackMoreButtons"
                 IsVisible="false"
                 Spacing="5">
 
-                <Button
+                    <Button
                     x:Name="btnCut"
                     ImageSource="cut.png"
                     Clicked="btnCut_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnAddLink"
                     ImageSource="add_link.png"
                     Clicked="btnAddLink_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnDeleteLink"
                     ImageSource="link_off.png"
                     Clicked="btnDeleteLink_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnPaste"
                     ImageSource="paste.png"
                     Clicked="btnPaste_Clicked" />
-                <Button
+                    <Button
                     x:Name="btnDelete"
                     ImageSource="delete.png"
                     Clicked="btnDelete_Clicked" />
 
-            </HorizontalStackLayout>
+                </HorizontalStackLayout>
 
-            <Entry
+                <Entry
                     x:Name="entryText"
                     Placeholder="Titel"
                     Focused="entryText_Focused"
                     TextChanged="entryText_TextChanged">
-            </Entry>
+                </Entry>
 
-            <Editor
+                <Editor
                 x:Name="editorNotes"
                 Placeholder="Inhalt"
                 TextChanged="editorNotes_TextChanged"
                 AutoSize="TextChanges"/>
 
-            <HorizontalStackLayout Spacing="5">
-                <Label Text="Termin:" VerticalTextAlignment="Center"/>
-                <Entry x:Name="entry_Due_on"></Entry>
-                <DatePicker x:Name="datePick_Due_on" DateSelected="datePick_Due_on_DateSelected"/>
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Termin:" VerticalTextAlignment="Center"/>
+                    <Entry x:Name="entry_Due_on"></Entry>
+                    <DatePicker x:Name="datePick_Due_on" DateSelected="datePick_Due_on_DateSelected"/>
 
-                <Label Text="Erledigt:" VerticalTextAlignment="Center"/>
-                <CheckBox x:Name="checkCompleted" CheckedChanged="checkCompleted_CheckedChanged"/>
-            </HorizontalStackLayout>
-            
-            <Label x:Name="lblDepend" Text="Ist abhängig von:"/>
-            <ListView Margin="20,0,0,0"
+                    <Label Text="Erledigt:" VerticalTextAlignment="Center"/>
+                    <CheckBox x:Name="checkCompleted" CheckedChanged="checkCompleted_CheckedChanged"/>
+                </HorizontalStackLayout>
+
+                <Label x:Name="lblDepend" Text="Ist abhängig von:"/>
+                <ListView Margin="20,0,0,0"
                 x:Name="listViewDepend" ItemTapped="myListView_ItemTapped">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <ViewCell>
-                            <VerticalStackLayout>
-                                <Label 
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <ViewCell>
+                                <VerticalStackLayout>
+                                    <Label 
                                     Text="{Binding name}" 
                                     FontAttributes="Bold" />
-                                <HorizontalStackLayout Spacing="5">
-                                    <Label HeightRequest="10" WidthRequest="10" BackgroundColor="{Binding DueDateColor}"/>
-                                    <Label Text="{Binding ViewDate}" />
-                                </HorizontalStackLayout>
-                            </VerticalStackLayout>
-                        </ViewCell>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                                    <HorizontalStackLayout Spacing="5">
+                                        <Label HeightRequest="10" WidthRequest="10" BackgroundColor="{Binding DueDateColor}"/>
+                                        <Label Text="{Binding ViewDate}" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </ViewCell>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
 
-            <Label x:Name="lblDependTo" Text="Hiervon abhängig:"/>
-            <ListView Margin="20,0,0,0"
+                <Label x:Name="lblDependTo" Text="Hiervon abhängig:"/>
+                <ListView Margin="20,0,0,0"
                 x:Name="listViewDependTo" ItemTapped="myListView_ItemTapped">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <ViewCell>
-                            <VerticalStackLayout>
-                                <Label 
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <ViewCell>
+                                <VerticalStackLayout>
+                                    <Label 
                                     Text="{Binding name}" 
                                     FontAttributes="Bold" />
-                                <HorizontalStackLayout Spacing="5">
-                                    <Label HeightRequest="10" WidthRequest="10" BackgroundColor="{Binding DueDateColor}"/>
-                                    <Label Text="{Binding ViewDate}" />
-                                </HorizontalStackLayout>
-                            </VerticalStackLayout>
-                        </ViewCell>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                                    <HorizontalStackLayout Spacing="5">
+                                        <Label HeightRequest="10" WidthRequest="10" BackgroundColor="{Binding DueDateColor}"/>
+                                        <Label Text="{Binding ViewDate}" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </ViewCell>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
 
-            <ListView
+                <ListView
                 x:Name="myListView" ItemTapped="myListView_ItemTapped">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <ViewCell>
-                            <VerticalStackLayout>
-                                <Label 
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <ViewCell>
+                                <VerticalStackLayout>
+                                    <Label 
                                     Text="{Binding NameInList}" 
                                     FontAttributes="Bold" />
-                                <HorizontalStackLayout Spacing="5">
-                                    <Label HeightRequest="10" WidthRequest="10" BackgroundColor="{Binding DueDateColor}"/>
-                                    <Label Text="{Binding ViewDate}" />
-                                </HorizontalStackLayout>
-                            </VerticalStackLayout>
-                        </ViewCell>
-                        <!-- 
+                                    <HorizontalStackLayout Spacing="5">
+                                        <Label HeightRequest="10" WidthRequest="10" BackgroundColor="{Binding DueDateColor}"/>
+                                        <Label Text="{Binding ViewDate}" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </ViewCell>
+                            <!-- 
                         <TextCell Text="{Binding NameInList}" Detail="{Binding ViewDate}" TextColor="{Binding Color}">
                         </TextCell>
                         -->
-                </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

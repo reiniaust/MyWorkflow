@@ -16,10 +16,12 @@ namespace MyWorkflow;
 public partial class MainPage : ContentPage
 {
     List<MyTask> tasks;
+    MySettings settings;
     string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     string jsonString;
     MyTask rootItem;
     MyTask currentItem;
+    MyTask oldItem;
     MyTask cutItem;
     MyTask linkToItem;
     ObservableCollection<MyTask> currentList;
@@ -42,7 +44,28 @@ public partial class MainPage : ContentPage
 
         btnPaste.IsVisible = false;
 
-        StartUp();
+        try
+        {
+            jsonString = File.ReadAllText(Path.Combine(docPath, "MyWorkflowSettings.json"));
+            settings = JsonSerializer.Deserialize<MySettings>(jsonString);
+            StartUp();
+        }
+        catch (Exception)
+        {
+            settings = new MySettings();
+            startEamilView.IsVisible = true;
+            mainView.IsVisible = false;
+        }
+
+    }
+    private void btnSaveEmail_Clicked(object sender, EventArgs e)
+    {
+        if (entryEmail.Text != null)
+        {
+            settings.Email = entryEmail.Text;
+            File.WriteAllText(Path.Combine(docPath, "MyWorkflowSettings.json"), JsonSerializer.Serialize(settings));
+            StartUp();
+        }
     }
 
     private void entryText_TextChanged(object sender, TextChangedEventArgs e)
@@ -56,7 +79,7 @@ public partial class MainPage : ContentPage
 
     private void editorNotes_TextChanged(object sender, TextChangedEventArgs e)
     {
-        setEditStatus();
+        //setEditStatus();
     }
 
     private void datePick_Due_on_DateSelected(object sender, DateChangedEventArgs e)
@@ -368,13 +391,8 @@ public partial class MainPage : ContentPage
 
     private void setItem(MyTask item)
     {
-        /*
-        if (datePick_Due_on.Date != DateTime.Today)
-        {
-            item.due_on = datePick_Due_on.Date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'");
+        oldItem = item.Clone() as MyTask;
 
-        }
-        */
         item.name = entryText.Text.TrimEnd();
         item.notes = editorNotes.Text;
         if (entry_Due_on.Text != "")
@@ -402,6 +420,9 @@ public partial class MainPage : ContentPage
 
     private void StartUp()
     {
+        startEamilView.IsVisible = false;
+        mainView.IsVisible = true;
+
         searchText = "";
         try
         {
@@ -440,6 +461,11 @@ public partial class MainPage : ContentPage
     {
         loadStatus = true;
 
+        if (currentItem == null)
+        {
+            currentItem = tasks.Find(x => x.gid == "");
+        }
+
         tasks.ForEach(x =>
         {
             if (x.name == null) x.name = "";
@@ -447,22 +473,6 @@ public partial class MainPage : ContentPage
             x.next_due_on = null;
             depList.Add(new DependenceItem() { Id = x.gid, NameAndPath = x.name + ItemPathRightToLeft(x) });
         });
-
-        /*
-        depList = depList.OrderBy(x => x.NameAndPath).ToList();
-        stackDependencies.Clear();
-        depComboList.Clear();
-        for (int i = 0; i <= currentItem.dependencies.Count; i++)
-        {
-            SfComboBox comboDep = new SfComboBox() { ItemsSource = depList, DisplayMemberPath = "NameAndPath", SelectedValuePath="Id", IsEditable = true };
-            if(i < currentItem.dependencies.Count)
-            {
-                comboDep.SelectedItem = depList.Find(x => x.Id == currentItem.dependencies[i]);
-            }
-            depComboList.Add(comboDep);
-            stackDependencies.Add(comboDep);
-        }
-        */
 
         // Abhängigkeiten anzeigen
         List<MyTask> dependList = new List<MyTask>();
@@ -724,6 +734,58 @@ public partial class MainPage : ContentPage
         var request = new RestRequest("");
         request.AddHeader("accept", "application/json");
         request.AddHeader("authorization", "Bearer " + accessToken);
+
+        if (operation == "add")
+        {
+            string text = Environment.NewLine + " Erstellt am " + DateTime.Now.ToShortDateString() + " von " + settings.Email;
+            MyTask parent = task;
+            while (parent != null && parent.parentid != null)
+            {
+                parent = tasks.FirstOrDefault(i => i.gid == parent.parentid);
+                if (parent.notes.Contains(text))
+                {
+                    text = "";
+                }
+            }
+            if (text != "")
+            {
+                task.notes += text;
+            }
+        }
+
+        if (operation == "update")
+        {
+            if (task.name != oldItem.name)
+            {
+                string text = Environment.NewLine + settings.Email + " hat am " + DateTime.Now.ToShortDateString() 
+                    + " den Betreff von \"" + oldItem.name + "\" auf \"" + task.name + "\" geändert.";
+                task.notes += text;
+            }
+            if (oldItem.due_on == null && task.due_on != null)
+            {
+                string text = Environment.NewLine + settings.Email + " hat am " + DateTime.Now.ToShortDateString()
+                    + " den Termin eingetragen.";
+                task.notes += text;
+            }
+            if (oldItem.due_on != null && task.due_on != oldItem.due_on)
+            {
+                string text = Environment.NewLine + settings.Email + " hat am " + DateTime.Now.ToShortDateString()
+                    + " den Termin von \"" + oldItem.due_on + "\" auf \"" + task.due_on + "\" geändert.";
+                task.notes += text;
+            }
+            if (!oldItem.completed && task.completed)
+            {
+                string text = Environment.NewLine + settings.Email + " hat am " + DateTime.Now.ToShortDateString()
+                    + " den Punkt erledigt.";
+                task.notes += text;
+            }
+            if (oldItem.completed && !task.completed)
+            {
+                string text = Environment.NewLine + settings.Email + " hat am " + DateTime.Now.ToShortDateString()
+                    + " den Punkt auf unerledigt geändert.";
+                task.notes += text;
+            }
+        }
 
         if (operation == "add" || operation == "update")
         {
