@@ -100,7 +100,7 @@ namespace MyWorkflow
             }
         }
 
-        string LocalDateString(string dateString)
+        public string LocalDateString(string dateString)
         {
             string returnDate = "";
             if (!string.IsNullOrEmpty(dateString))

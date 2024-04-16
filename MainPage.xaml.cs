@@ -9,6 +9,7 @@ using System.Globalization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Xml.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 //using Syncfusion.Maui.Inputs;
 
 namespace MyWorkflow;
@@ -191,30 +192,6 @@ public partial class MainPage : ContentPage
         entry_Due_on.Text = "";
         entryText.Focus();
 
-        /*
-        if (currentItem.name == entryText.Text)
-        {
-            lblStatus.Text = "Bitte erst den Titel eingeben bzw. ändern.";
-        }
-        else
-        {
-            string id = random.Next(idFrom, idTo).ToString();
-            MyTask item = new MyTask()
-            {
-                gid = id,
-                parentid = currentItem.gid,
-                created_at = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss", CultureInfo.InvariantCulture)
-            };
-            setItem(item);
-            tasks.Add(item);
-            entryText.Text = "";
-            editorNotes.Text = "";
-            entry_Due_on.Text = "";
-
-            SaveTask("add", item);
-        }
-        */
-        
     }
 
 
@@ -247,7 +224,7 @@ public partial class MainPage : ContentPage
                 created_at = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss", CultureInfo.InvariantCulture)
             };
             setItem(item);
-            tasks.Add(item);
+            //tasks.Add(item);
         }
         if (operation == "update")
         {
@@ -735,57 +712,56 @@ public partial class MainPage : ContentPage
         request.AddHeader("accept", "application/json");
         request.AddHeader("authorization", "Bearer " + accessToken);
 
-        if (operation == "add")
+        // Historie / Änderungsprotokoll            
+        //if (!currentItem.notes.Contains("AccessToken:"))
         {
-            string text = Environment.NewLine + " Erstellt am " + DateTime.Now.ToShortDateString() + " von " + settings.Email;
-            MyTask parent = task;
-            while (parent != null && parent.parentid != null)
+            string text = "";
+            if (operation == "add")
             {
-                parent = tasks.FirstOrDefault(i => i.gid == parent.parentid);
-                if (parent.notes.Contains(text))
+                text += "Erstellt am " + DateTime.Now.ToShortDateString() + " von " + settings.Email + ".";
+                MyTask parent = task;
+                while (parent != null && parent.parentid != null)
                 {
-                    text = "";
+                    parent = tasks.FirstOrDefault(i => i.gid == parent.parentid);
+                    if (parent.notes.Contains(text))
+                    {
+                        text = "";
+                    }
                 }
+            }
+
+            if (oldItem != null && operation == "update")
+            {
+                if (task.name != oldItem.name)
+                {
+                    text += "Betreff geändert von " + settings.Email + " am " + DateTime.Now.ToShortDateString()
+                        + " von '" + oldItem.name + "' auf '" + task.name + "'. ";
+                }
+                if (oldItem.due_on == null && task.due_on != null)
+                {
+                    text += "Termin eingetragen von " + settings.Email + " am " + DateTime.Now.ToShortDateString() + ". ";
+                }
+                if (oldItem.due_on != null && task.due_on != oldItem.due_on)
+                {
+                    text += "Termin geändert von " + settings.Email + " am " + DateTime.Now.ToShortDateString()
+                        + " von '" + task.LocalDateString(oldItem.due_on) + "' auf '" + task.LocalDateString(task.due_on) + "'. ";
+                }
+                if (!oldItem.completed && task.completed)
+                {
+                    text += "Punkt erledigt von " + settings.Email + " am " + DateTime.Now.ToShortDateString() + ". ";
+                }
+                if (oldItem.completed && !task.completed)
+                {
+                    text += "Punkt auf unerledigt von " + settings.Email + " am " + DateTime.Now.ToShortDateString() + ". ";
+                }
+                oldItem = null;
             }
             if (text != "")
             {
-                task.notes += text;
+                task.notes += text + " ";
             }
         }
 
-        if (operation == "update")
-        {
-            if (task.name != oldItem.name)
-            {
-                string text = Environment.NewLine + settings.Email + " hat am " + DateTime.Now.ToShortDateString() 
-                    + " den Betreff von \"" + oldItem.name + "\" auf \"" + task.name + "\" geändert.";
-                task.notes += text;
-            }
-            if (oldItem.due_on == null && task.due_on != null)
-            {
-                string text = Environment.NewLine + settings.Email + " hat am " + DateTime.Now.ToShortDateString()
-                    + " den Termin eingetragen.";
-                task.notes += text;
-            }
-            if (oldItem.due_on != null && task.due_on != oldItem.due_on)
-            {
-                string text = Environment.NewLine + settings.Email + " hat am " + DateTime.Now.ToShortDateString()
-                    + " den Termin von \"" + oldItem.due_on + "\" auf \"" + task.due_on + "\" geändert.";
-                task.notes += text;
-            }
-            if (!oldItem.completed && task.completed)
-            {
-                string text = Environment.NewLine + settings.Email + " hat am " + DateTime.Now.ToShortDateString()
-                    + " den Punkt erledigt.";
-                task.notes += text;
-            }
-            if (oldItem.completed && !task.completed)
-            {
-                string text = Environment.NewLine + settings.Email + " hat am " + DateTime.Now.ToShortDateString()
-                    + " den Punkt auf unerledigt geändert.";
-                task.notes += text;
-            }
-        }
 
         if (operation == "add" || operation == "update")
         {
@@ -830,6 +806,8 @@ public partial class MainPage : ContentPage
             {
                 AsanaTaskResponse taskResponse = JsonSerializer.Deserialize<AsanaTaskResponse>(response.Content);
                 task.gid = taskResponse.data.gid;
+                tasks.Add(task);
+                LoadCurrentList();
             }
         }
         if (operation == "update")
