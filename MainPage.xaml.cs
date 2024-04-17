@@ -723,7 +723,7 @@ public partial class MainPage : ContentPage
                 while (parent != null && parent.parentid != null)
                 {
                     parent = tasks.FirstOrDefault(i => i.gid == parent.parentid);
-                    if (parent.notes.Contains(text))
+                    if (parent.notes != null && parent.notes.Contains(text))
                     {
                         text = "";
                     }
@@ -741,7 +741,7 @@ public partial class MainPage : ContentPage
                 {
                     text += "Termin eingetragen von " + settings.Email + " am " + DateTime.Now.ToShortDateString() + ". ";
                 }
-                if (oldItem.due_on != null && task.due_on != oldItem.due_on)
+                if (oldItem.due_on != null && task.LocalDateString(task.due_on) != task.LocalDateString(oldItem.due_on))
                 {
                     text += "Termin geändert von " + settings.Email + " am " + DateTime.Now.ToShortDateString()
                         + " von '" + task.LocalDateString(oldItem.due_on) + "' auf '" + task.LocalDateString(task.due_on) + "'. ";
