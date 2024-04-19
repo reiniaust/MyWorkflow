@@ -38,6 +38,7 @@ public partial class MainPage : ContentPage
     //List<SfComboBox> depComboList = new List<SfComboBox>();   
     bool editStatus;
     bool loadStatus;
+    bool hasNews;
 
     public MainPage()
 	{
@@ -183,7 +184,7 @@ public partial class MainPage : ContentPage
 
     private void btnAdd_Clicked(object sender, EventArgs e)
     {
-        lblStatus.Text = "Hinzufügen";
+        SetStatus("Hinzufügen");
         editStatus = true;
         operation = "add";
         setButtonStatus();
@@ -195,9 +196,9 @@ public partial class MainPage : ContentPage
     }
 
 
-    private void btnUpdate_Clicked(object sender, EventArgs e)
+    private void btnEdit_Clicked(object sender, EventArgs e)
     {
-        lblStatus.Text = "Ändern";
+        SetStatus("Ändern");
         editStatus = true;
         operation = "update";
         setButtonStatus();
@@ -208,7 +209,7 @@ public partial class MainPage : ContentPage
         editStatus = true;
         operation = "delete";
         setButtonStatus();
-        lblStatus.Text = "Zum Löschen auf Speichern klicken.";
+        SetStatus("Zum Löschen auf Speichern klicken.");
     }
 
     private void btnSave_Clicked(object sender, EventArgs e)
@@ -295,7 +296,7 @@ public partial class MainPage : ContentPage
 
     private void btnAddLink_Clicked(object sender, EventArgs e)
     {
-        lblStatus.Text = "Abhängigkeit hinzufügen: Punkt auswählen und auf Speichern klicken.";
+        SetStatus("Abhängigkeit hinzufügen: Punkt auswählen und auf Speichern klicken.");
         linkToItem = currentItem;
         editStatus = true;
         setButtonStatus();
@@ -303,7 +304,7 @@ public partial class MainPage : ContentPage
 
     private void btnDeleteLink_Clicked(object sender, EventArgs e)
     {
-        lblStatus.Text = "Zu löschende Abhängigkeit anklicken.";
+        SetStatus("Zu löschende Abhängigkeit anklicken.");
         operation = "deleteLink";
     }
 
@@ -332,10 +333,12 @@ public partial class MainPage : ContentPage
 
     void setButtonStatus()
     {
+        btnBack.IsVisible = !editStatus || linkToItem != null;
+        btnSearch.IsVisible = !editStatus || linkToItem != null;
         if (currentItem.gid == "")
         {
             btnBack.IsVisible = false;
-            btnUpdate.IsVisible = false;
+            btnEdit.IsVisible = false;
             btnExpandMore.IsVisible = false;
             btnExpandLess.IsVisible = false;
             btnCut.IsVisible = false;
@@ -346,8 +349,7 @@ public partial class MainPage : ContentPage
         else
         {
             btnRefresh.IsVisible = !editStatus || linkToItem != null;
-            btnBack.IsVisible = !editStatus || linkToItem != null;
-            btnUpdate.IsVisible = !editStatus;
+            btnEdit.IsVisible = !editStatus;
             if (!editStatus)
             {
                 btnExpandMore.IsVisible = !stackMoreButtons.IsVisible;
@@ -359,7 +361,6 @@ public partial class MainPage : ContentPage
             btnDelete.IsVisible = !editStatus;
         }
 
-        btnSearch.IsVisible = !editStatus;
         btnAdd.IsVisible = !editStatus;
         btnSave.IsVisible = editStatus;
         btnCancel.IsVisible = editStatus;
@@ -394,6 +395,18 @@ public partial class MainPage : ContentPage
         */
     }
 
+    private void setItemPropertys(MyTask fromItem, MyTask toItem)
+    {
+        toItem.name = fromItem.name;
+        toItem.notes = fromItem.notes;
+        toItem.due_on = fromItem.due_on;
+        toItem.completed = fromItem.completed;
+        if (toItem.modified_at != fromItem.modified_at)
+        {
+            toItem.modified_at = fromItem.modified_at;
+            hasNews = true;
+        }
+    }
 
     private void StartUp()
     {
@@ -428,7 +441,7 @@ public partial class MainPage : ContentPage
     void ReadAllAssana()
     {
         // Asana Tasks löschen
-        tasks = tasks.Where(x => x.gid.Length <= idTo.ToString().Length || x.parentid == "").ToList();
+        //tasks = tasks.Where(x => x.gid.Length <= idTo.ToString().Length || x.parentid == "").ToList();
         foreach (var task in tasks.Where(x => x.notes != null && x.notes.Contains("AccessToken:")))
         {
             ReadAsana(task);
@@ -436,6 +449,8 @@ public partial class MainPage : ContentPage
     }
     private void LoadCurrentList()
     {
+        SetStatus("");
+
         loadStatus = true;
 
         if (currentItem == null)
@@ -522,7 +537,7 @@ public partial class MainPage : ContentPage
 
         checkCompleted.IsChecked = currentItem.completed;
 
-        lblStatus.Text = ItemPathLeftToRight(currentItem);
+        lblPath.Text = ItemPathLeftToRight(currentItem);
         if (currentItem.gid != "")
         {
             btnBack.IsEnabled = true;
@@ -573,6 +588,7 @@ public partial class MainPage : ContentPage
 
     private async Task ReadAsana(MyTask rootTask)
     {
+        SetTasksToNotRefreshed(rootTask);
 
         string accessToken = rootTask.notes.Split("AccessToken: ")[1].Split(",")[0];
         var options = new RestClientOptions();
@@ -619,7 +635,18 @@ public partial class MainPage : ContentPage
                     task.due_on = taskResponse.data.due_on;
                     task.completed = taskResponse.data.completed;
                     task.parentid = rootTask.gid;
-                    tasks.Add(task);
+
+                    var updTask = tasks.Find(x => x.gid == task.gid);
+                    if (updTask != null)
+                    {
+                        setItemPropertys(task, updTask);
+                    }
+                    else
+                    {
+                        tasks.Add(task);
+                        hasNews = true;
+                    }
+
                     await ReadSubTasks(task, null);
                 }
             }
@@ -628,7 +655,26 @@ public partial class MainPage : ContentPage
                 await ReadSubTasks(rootTask, taskId);
             }
 
+            tasks = tasks.Where(x => !(x.notes != null && x.notes.Contains("[nicht aktualisiert]"))).ToList();
+
+            SaveItems();
+
             LoadCurrentList();
+
+            if (hasNews)
+            {
+                SetStatus("Es gibt Neuigkeiten. Dazu einfach das Suchsymbol betätigen.");
+                hasNews = false;
+            }
+        }
+
+        void SetTasksToNotRefreshed(MyTask item)
+        {
+            foreach (var subItem in tasks.Where(x => x.parentid == item.gid))
+            {
+                subItem.notes += "[nicht aktualisiert]";
+                SetTasksToNotRefreshed(subItem);
+            }
         }
 
         async Task ReadSubTasks(MyTask task, string taskId)
@@ -673,13 +719,22 @@ public partial class MainPage : ContentPage
                         subtask.dependencies.Add(depResponse.data[i].gid);
                     } 
 
-                    tasks.Add(subtask);
+                    var updTask = tasks.Find(x => x.gid == subtask.gid);
+                    if (updTask != null)
+                    {
+                        setItemPropertys(subtask, updTask);
+                    }
+                    else
+                    {
+                        tasks.Add(subtask);
+                    }
+
                     ReadSubTasks(subtask, null);
                 }
             }
             else 
             {
-                lblStatus.Text = response.Content.ToString();
+                SetStatus(response.Content.ToString());
             }
         }
     }
@@ -800,7 +855,7 @@ public partial class MainPage : ContentPage
             var response = await client.PostAsync(request);
             if (!response.IsSuccessful)
             {
-                lblStatus.Text = response.Content.ToString();
+                SetStatus(response.Content.ToString());
             }
             else
             {
@@ -815,7 +870,7 @@ public partial class MainPage : ContentPage
             var response = await client.PutAsync(request);
             if (!response.IsSuccessful)
             { 
-                lblStatus.Text = response.Content.ToString();
+                SetStatus(response.Content.ToString());
             }
         }
         if (operation == "delete")
@@ -833,7 +888,7 @@ public partial class MainPage : ContentPage
             var response = await client.PostAsync(request);
             if (!response.IsSuccessful)
             {
-                lblStatus.Text = response.Content.ToString();
+                SetStatus(response.Content.ToString());
             }
         }
 
@@ -905,11 +960,14 @@ public partial class MainPage : ContentPage
         }
     }
 
-    class Test
+    void SetStatus(string text)
     {
-        public string Name { get; set; }
-        public string TextColor { get; set; }
-    }
+        if (text == "")
+            lblStatus.IsVisible = false;
+        else
+            lblStatus.IsVisible = true;
 
+        lblStatus.Text = text;
+    }
 }
 

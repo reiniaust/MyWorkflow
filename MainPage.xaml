@@ -30,6 +30,7 @@
             Padding="10">
 
                 <Label x:Name="lblStatus"></Label>
+                <Label x:Name="lblPath"></Label>
 
                 <HorizontalStackLayout
                 Spacing="5">
@@ -51,9 +52,9 @@
                     ImageSource="add.png"
                     Clicked="btnAdd_Clicked" />
                     <Button
-                    x:Name="btnUpdate"
+                    x:Name="btnEdit"
                     ImageSource="edit.png"
-                    Clicked="btnUpdate_Clicked" />
+                    Clicked="btnEdit_Clicked" />
                     <Button
                     x:Name="btnSave"
                     ImageSource="save.png"
