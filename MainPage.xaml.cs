@@ -318,6 +318,7 @@ public partial class MainPage : ContentPage
             cutItem = null;
         }
         btnPaste.IsVisible = false;
+        currentItem = item;
         SaveTask("update", item);
     }
 
@@ -588,7 +589,7 @@ public partial class MainPage : ContentPage
 
     private async Task ReadAsana(MyTask rootTask)
     {
-        SetTasksToNotRefreshed(rootTask);
+        SetTasksToNotRefreshed(rootTask, "[nicht aktualisiert " + rootTask.gid + "]");
 
         string accessToken = rootTask.notes.Split("AccessToken: ")[1].Split(",")[0];
         var options = new RestClientOptions();
@@ -655,11 +656,16 @@ public partial class MainPage : ContentPage
                 await ReadSubTasks(rootTask, taskId);
             }
 
-            tasks = tasks.Where(x => !(x.notes != null && x.notes.Contains("[nicht aktualisiert]"))).ToList();
+            //List<MyTask> test = tasks.Where(x => (x.notes != null && x.notes.Contains("[nicht aktualisiert " + rootTask.gid + "]"))).ToList();
+            tasks = tasks.Where(x => !(x.notes != null && x.notes.Contains("[nicht aktualisiert " + rootTask.gid + "]"))).ToList();
 
             SaveItems();
 
-            LoadCurrentList();
+            if (!editStatus)
+            {
+                // Nicht neu laden, während editiert wird
+                LoadCurrentList();
+            }
 
             if (hasNews)
             {
@@ -668,12 +674,12 @@ public partial class MainPage : ContentPage
             }
         }
 
-        void SetTasksToNotRefreshed(MyTask item)
+        void SetTasksToNotRefreshed(MyTask item, string text)
         {
             foreach (var subItem in tasks.Where(x => x.parentid == item.gid))
             {
-                subItem.notes += "[nicht aktualisiert]";
-                SetTasksToNotRefreshed(subItem);
+                subItem.notes += text;
+                SetTasksToNotRefreshed(subItem, text);
             }
         }
 
