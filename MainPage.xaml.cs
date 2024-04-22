@@ -931,39 +931,60 @@ public partial class MainPage : ContentPage
 
     void GetNextDateFromItems(MyTask item)
     {
-        foreach (var subItem in tasks.Where(x => x.parentid == item.gid))
+        if (IsResponsible(item))
         {
-            GetNextDateFromItems(subItem);
-            if (!subItem.completed && subItem.next_due_on != null)
+            foreach (var subItem in tasks.Where(x => x.parentid == item.gid))
             {
-                if (item.next_due_on == null)
+                GetNextDateFromItems(subItem);
+                if (!subItem.completed && subItem.next_due_on != null)
                 {
-                    item.next_due_on = subItem.next_due_on;
-                }
-                else
-                {
-                    if (DateTime.Parse(subItem.next_due_on) < DateTime.Parse(item.next_due_on))
+                    if (item.next_due_on == null)
                     {
                         item.next_due_on = subItem.next_due_on;
                     }
+                    else
+                    {
+                        if (DateTime.Parse(subItem.next_due_on) < DateTime.Parse(item.next_due_on))
+                        {
+                            item.next_due_on = subItem.next_due_on;
+                        }
+                    }
                 }
             }
-        }
-        if (item.due_on != null)
-        {
-            if (item.next_due_on != null)
+            if (item.due_on != null)
             {
-                if (DateTime.Parse(item.due_on) < DateTime.Parse(item.next_due_on))
+                if (item.next_due_on != null)
+                {
+                    if (DateTime.Parse(item.due_on) < DateTime.Parse(item.next_due_on))
+                    {
+                        item.next_due_on = item.due_on;
+                    }
+                }
+                else
                 {
                     item.next_due_on = item.due_on;
                 }
             }
-            else
-            {
-                item.next_due_on = item.due_on;
-            }
-
         }
+    }
+
+    /// <summary>
+    /// Prüfen, ob man selber zustämdig ist. Wenn nicht, dann den Termin ignorieren
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
+    bool IsResponsible(MyTask item)
+    {
+        bool isResponsible = true;
+        foreach (var id in item.dependencies)
+        {
+            MyTask depItem = tasks.Find(x => x.gid == id);
+            if (depItem.notes != null && depItem.notes.Contains("@") && !depItem.notes.Contains(settings.Email))
+            {
+                isResponsible = false;
+            }
+        }
+        return isResponsible;
     }
 
     void SetStatus(string text)
