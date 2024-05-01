@@ -29,7 +29,7 @@ public partial class MainPage : ContentPage
     Random random = new Random();
     int idFrom = 100000000;
     int idTo = 999999999;
-    string searchText;
+    string searchText = "";
     int searchCounter = 0;
     string operation = "";
     //bool deleteConfirmed;
@@ -70,6 +70,7 @@ public partial class MainPage : ContentPage
         }
     }
 
+    /*
     private void entryText_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (entryText.Text != null && entryText.Text != currentItem.name)
@@ -78,6 +79,14 @@ public partial class MainPage : ContentPage
             searchCounter = 0;
         }
     }
+    */
+
+    private void searchBar_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        searchText = searchBar.Text;
+        searchCounter = 0;
+    }
+
 
     private void editorNotes_TextChanged(object sender, TextChangedEventArgs e)
     {
@@ -118,7 +127,24 @@ public partial class MainPage : ContentPage
         StartUp();
     }
 
+    /*
     private void btnSearch_Clicked(object sender, EventArgs e)
+    {
+        int i = 0;
+        foreach (var task in tasks.Where(x => isSearchInTitem(x))
+            .OrderByDescending(x => x.modified_at == null ? x.created_at : x.modified_at))
+        {
+            if (i == searchCounter)
+            {
+                currentItem = task;
+            }
+            i += 1;
+        }
+        searchCounter++;
+        LoadCurrentList();
+    }
+    */
+    private void searchBar_SearchButtonPressed(object sender, EventArgs e)
     {
         int i = 0;
         foreach (var task in tasks.Where(x => isSearchInTitem(x))
@@ -225,7 +251,6 @@ public partial class MainPage : ContentPage
                 created_at = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss", CultureInfo.InvariantCulture)
             };
             setItem(item);
-            //tasks.Add(item);
         }
         if (operation == "update")
         {
@@ -334,8 +359,13 @@ public partial class MainPage : ContentPage
 
     void setButtonStatus()
     {
+        searchBar.IsVisible = !editStatus;
+        entryText.IsVisible = editStatus;
+        editorNotes.IsVisible = editStatus || currentItem.notes != "";
+        stack_Due_on_Completed.IsVisible = editStatus || currentItem.due_on != null;
+
         btnBack.IsVisible = !editStatus || linkToItem != null;
-        btnSearch.IsVisible = !editStatus || linkToItem != null;
+        //btnSearch.IsVisible = !editStatus || linkToItem != null;
         if (currentItem.gid == "")
         {
             btnBack.IsVisible = false;
@@ -549,12 +579,16 @@ public partial class MainPage : ContentPage
 
     private void SaveTask(string operation, MyTask item)
     {
-        SaveItems();
         if (currentItem.notes != null && currentItem.notes.Contains("AccessToken:") || currentItem.gid.Length > idTo.ToString().Length)
         //if (currentItem.gid.Length > idTo.ToString().Length)
         {
             SaveAsanaTask(operation, item);
         }
+        else
+        {
+            tasks.Add(item);
+        }
+        SaveItems();
 
         if (operation == "update" || operation == "delete")
         {
@@ -902,7 +936,7 @@ public partial class MainPage : ContentPage
 
     public string ItemPathLeftToRight(MyTask task)
     {
-        string path = "";
+        string path = task.name;
         while (task != null && task.parentid != null)
         {
             task = tasks.FirstOrDefault(i => i.gid == task.parentid);
@@ -996,5 +1030,6 @@ public partial class MainPage : ContentPage
 
         lblStatus.Text = text;
     }
+
 }
 

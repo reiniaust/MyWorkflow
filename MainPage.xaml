@@ -25,53 +25,59 @@
             </VerticalStackLayout>
 
             <VerticalStackLayout 
-            x:Name="mainView"
-            Spacing="10"
-            Padding="10">
+                x:Name="mainView"
+                Spacing="10"
+                Padding="10">
 
                 <Label x:Name="lblStatus"></Label>
+                <SearchBar 
+                    x:Name="searchBar" 
+                    TextChanged="searchBar_TextChanged" 
+                    SearchButtonPressed="searchBar_SearchButtonPressed"/>
                 <Label x:Name="lblPath"></Label>
 
                 <HorizontalStackLayout
                 Spacing="5">
 
                     <Button
-                    x:Name="btnRefresh"
-                    ImageSource="refresh.png"
-                    Clicked="btnRefresh_Clicked" />
+                        x:Name="btnRefresh"
+                        ImageSource="refresh.png"
+                        Clicked="btnRefresh_Clicked" />
                     <Button
-                    x:Name="btnBack"
-                    ImageSource="arrow_back.png"
-                    Clicked="btnBack_Clicked" />
+                        x:Name="btnBack"
+                        ImageSource="arrow_back.png"
+                        Clicked="btnBack_Clicked" />
+                    <!--
                     <Button
-                    x:Name="btnSearch"
-                    ImageSource="search.png"
-                    Clicked="btnSearch_Clicked" />
+                        x:Name="btnSearch"
+                        ImageSource="search.png"
+                        Clicked="btnSearch_Clicked" />
+                    -->
                     <Button
-                    x:Name="btnAdd"
-                    ImageSource="add.png"
-                    Clicked="btnAdd_Clicked" />
+                        x:Name="btnAdd"
+                        ImageSource="add.png"
+                        Clicked="btnAdd_Clicked" />
                     <Button
-                    x:Name="btnEdit"
-                    ImageSource="edit.png"
-                    Clicked="btnEdit_Clicked" />
+                        x:Name="btnEdit"
+                        ImageSource="edit.png"
+                        Clicked="btnEdit_Clicked" />
                     <Button
-                    x:Name="btnSave"
-                    ImageSource="save.png"
-                    Clicked="btnSave_Clicked" />
+                        x:Name="btnSave"
+                        ImageSource="save.png"
+                        Clicked="btnSave_Clicked" />
                     <Button
-                    x:Name="btnCancel"
-                    ImageSource="cancel.png"
-                    Clicked="btnCancel_Clicked" />
+                        x:Name="btnCancel"
+                        ImageSource="cancel.png"
+                        Clicked="btnCancel_Clicked" />
                     <Button
-                    x:Name="btnExpandMore"
-                    ImageSource="expand_more.png"
-                    Clicked="btnExpandMore_Clicked" />
+                        x:Name="btnExpandMore"
+                        ImageSource="expand_more.png"
+                        Clicked="btnExpandMore_Clicked" />
                     <Button
-                    x:Name="btnExpandLess"
-                    IsVisible="false"
-                    ImageSource="expand_less.png"
-                    Clicked="btnExpandLess_Clicked" />
+                        x:Name="btnExpandLess"
+                        IsVisible="false"
+                        ImageSource="expand_less.png"
+                        Clicked="btnExpandLess_Clicked" />
 
                 </HorizontalStackLayout>
 
@@ -81,42 +87,40 @@
                 Spacing="5">
 
                     <Button
-                    x:Name="btnCut"
-                    ImageSource="cut.png"
-                    Clicked="btnCut_Clicked" />
+                        x:Name="btnCut"
+                        ImageSource="cut.png"
+                        Clicked="btnCut_Clicked" />
                     <Button
-                    x:Name="btnAddLink"
-                    ImageSource="add_link.png"
-                    Clicked="btnAddLink_Clicked" />
+                        x:Name="btnAddLink"
+                        ImageSource="add_link.png"
+                        Clicked="btnAddLink_Clicked" />
                     <Button
-                    x:Name="btnDeleteLink"
-                    ImageSource="link_off.png"
-                    Clicked="btnDeleteLink_Clicked" />
+                        x:Name="btnDeleteLink"
+                        ImageSource="link_off.png"
+                        Clicked="btnDeleteLink_Clicked" />
                     <Button
-                    x:Name="btnPaste"
-                    ImageSource="paste.png"
-                    Clicked="btnPaste_Clicked" />
+                        x:Name="btnPaste"
+                        ImageSource="paste.png"
+                        Clicked="btnPaste_Clicked" />
                     <Button
-                    x:Name="btnDelete"
-                    ImageSource="delete.png"
-                    Clicked="btnDelete_Clicked" />
+                        x:Name="btnDelete"
+                        ImageSource="delete.png"
+                        Clicked="btnDelete_Clicked" />
 
                 </HorizontalStackLayout>
 
                 <Entry
                     x:Name="entryText"
                     Placeholder="Titel"
-                    Focused="entryText_Focused"
-                    TextChanged="entryText_TextChanged">
-                </Entry>
+                    Focused="entryText_Focused"/>
 
                 <Editor
-                x:Name="editorNotes"
-                Placeholder="Inhalt"
-                TextChanged="editorNotes_TextChanged"
-                AutoSize="TextChanges"/>
+                    x:Name="editorNotes"
+                    Placeholder="Inhalt"
+                    TextChanged="editorNotes_TextChanged"
+                    AutoSize="TextChanges"/>
 
-                <HorizontalStackLayout Spacing="5">
+                <HorizontalStackLayout x:Name="stack_Due_on_Completed" Spacing="5">
                     <Label Text="Termin:" VerticalTextAlignment="Center"/>
                     <Entry x:Name="entry_Due_on"></Entry>
                     <DatePicker x:Name="datePick_Due_on" DateSelected="datePick_Due_on_DateSelected"/>
@@ -125,6 +129,7 @@
                     <CheckBox x:Name="checkCompleted" CheckedChanged="checkCompleted_CheckedChanged"/>
                 </HorizontalStackLayout>
 
+                
                 <Label x:Name="lblDepend" Text="Ist abhängig von:"/>
                 <ListView Margin="20,0,0,0"
                 x:Name="listViewDepend" ItemTapped="myListView_ItemTapped">
