@@ -146,6 +146,10 @@ public partial class MainPage : ContentPage
     */
     private void searchBar_SearchButtonPressed(object sender, EventArgs e)
     {
+        if (searchBar.Text == "*")
+        {
+            searchText = "";
+        }
         int i = 0;
         foreach (var task in tasks.Where(x => isSearchInTitem(x))
             .OrderByDescending(x => x.modified_at == null ? x.created_at : x.modified_at))
@@ -441,10 +445,17 @@ public partial class MainPage : ContentPage
 
     private void StartUp()
     {
-        startEamilView.IsVisible = false;
+        try
+        {
+            startEamilView.IsVisible = false;
+            mainView.IsVisible = true;
+
+            searchText = "";
+                    startEamilView.IsVisible = false;
         mainView.IsVisible = true;
 
         searchText = "";
+        searchBar.Text = "*";
         try
         {
             jsonString = File.ReadAllText(Path.Combine(docPath, "MyWorkflowData.json"));
@@ -467,6 +478,35 @@ public partial class MainPage : ContentPage
         ReadAllAssana();
 
         LoadCurrentList();
+
+            try
+            {
+                jsonString = File.ReadAllText(Path.Combine(docPath, "MyWorkflowData.json"));
+                //tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
+                tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
+            }
+            catch (Exception)
+            {
+                tasks = new List<MyTask>();
+            }
+            currentItem = tasks.Find(x => x.gid == "");
+            if (currentItem == null)
+            {
+                currentItem = new MyTask() { gid = "" };
+                tasks.Add(currentItem);
+            }
+            rootItem = currentItem;
+            editStatus = false;
+
+            ReadAllAssana();
+
+            LoadCurrentList();
+
+        }
+        catch (Exception e)
+        {
+            SetStatus(e.Message);
+        }
     }
 
     void ReadAllAssana()
