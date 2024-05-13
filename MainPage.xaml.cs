@@ -445,13 +445,11 @@ public partial class MainPage : ContentPage
 
     private void StartUp()
     {
-        try
-        {
-            startEamilView.IsVisible = false;
-            mainView.IsVisible = true;
+        startEamilView.IsVisible = false;
+        mainView.IsVisible = true;
 
-            searchText = "";
-                    startEamilView.IsVisible = false;
+        searchText = "";
+        startEamilView.IsVisible = false;
         mainView.IsVisible = true;
 
         searchText = "";
@@ -478,35 +476,6 @@ public partial class MainPage : ContentPage
         ReadAllAssana();
 
         LoadCurrentList();
-
-            try
-            {
-                jsonString = File.ReadAllText(Path.Combine(docPath, "MyWorkflowData.json"));
-                //tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
-                tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
-            }
-            catch (Exception)
-            {
-                tasks = new List<MyTask>();
-            }
-            currentItem = tasks.Find(x => x.gid == "");
-            if (currentItem == null)
-            {
-                currentItem = new MyTask() { gid = "" };
-                tasks.Add(currentItem);
-            }
-            rootItem = currentItem;
-            editStatus = false;
-
-            ReadAllAssana();
-
-            LoadCurrentList();
-
-        }
-        catch (Exception e)
-        {
-            SetStatus(e.Message);
-        }
     }
 
     void ReadAllAssana()
@@ -535,6 +504,11 @@ public partial class MainPage : ContentPage
             x.name = x.name.TrimEnd();
             x.next_due_on = null;
             depList.Add(new DependenceItem() { Id = x.gid, NameAndPath = x.name + ItemPathRightToLeft(x) });
+            // Vermeidung eines Absturzes durch Endlosschleife
+            if(x.parentid == x.gid)
+            {
+                x.parentid = "";
+            }
         });
 
         // Abhängigkeiten anzeigen
@@ -650,18 +624,17 @@ public partial class MainPage : ContentPage
         File.WriteAllText(Path.Combine(docPath, "MyWorkflowData" + DateTime.Today.ToString().Split(" ")[0].Replace("/", "") + ".json"), JsonSerializer.Serialize(tasks));
     }
 
-    private void entryText_Focused(object sender, FocusEventArgs e)
+    private void searchBar_Focused(object sender, FocusEventArgs e)
     {
+        /*
         Dispatcher.Dispatch(() =>
         {
             var entry = sender as Entry;
-
             entry.CursorPosition = 0;
             entry.SelectionLength = entry.Text == null ? 0 : entry.Text.Length;
         });
-
+        */
     }
-
 
 
     private async Task ReadAsana(MyTask rootTask)
