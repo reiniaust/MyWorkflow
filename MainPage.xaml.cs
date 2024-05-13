@@ -600,7 +600,10 @@ public partial class MainPage : ContentPage
         }
         else
         {
-            tasks.Add(item);
+            if (operation == "add")
+		{
+    			tasks.Add(item);
+		}
         }
         SaveItems();
 
