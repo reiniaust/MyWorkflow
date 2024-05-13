@@ -792,6 +792,7 @@ public partial class MainPage : ContentPage
                     subtask.parentid = task.gid;
 
                     // Abhängigkeiten lesen
+                    /*
                     url += "/dependencies";
                     options = new RestClientOptions(url);
                     client = new RestClient(options);
@@ -801,6 +802,7 @@ public partial class MainPage : ContentPage
                     {
                         subtask.dependencies.Add(depResponse.data[i].gid);
                     } 
+                    */
 
                     var updTask = tasks.Find(x => x.gid == subtask.gid);
                     if (updTask != null)
