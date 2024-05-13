@@ -33,6 +33,7 @@
                 <SearchBar 
                     x:Name="searchBar" 
                     TextChanged="searchBar_TextChanged" 
+                    Focused="searchBar_Focused"
                     SearchButtonPressed="searchBar_SearchButtonPressed"/>
                 <Label x:Name="lblPath"></Label>
 
@@ -111,8 +112,7 @@
 
                 <Entry
                     x:Name="entryText"
-                    Placeholder="Titel"
-                    Focused="entryText_Focused"/>
+                    Placeholder="Titel"/>
 
                 <Editor
                     x:Name="editorNotes"
