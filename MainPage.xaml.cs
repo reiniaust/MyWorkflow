@@ -50,13 +50,16 @@ public partial class MainPage : ContentPage
         {
             jsonString = File.ReadAllText(Path.Combine(docPath, "MyWorkflowSettings.json"));
             settings = JsonSerializer.Deserialize<MySettings>(jsonString);
-            StartUp();
         }
         catch (Exception)
         {
             settings = new MySettings();
             startEamilView.IsVisible = true;
             mainView.IsVisible = false;
+        }
+        if (mainView.IsVisible)
+        {
+            StartUp();
         }
 
     }
@@ -465,6 +468,7 @@ public partial class MainPage : ContentPage
             tasks = new List<MyTask>();
         }
         currentItem = tasks.Find(x => x.gid == "");
+        currentItem.name = "";
         if (currentItem == null)
         {
             currentItem = new MyTask() { gid = "" };
@@ -552,6 +556,8 @@ public partial class MainPage : ContentPage
         }
 
         GetNextDateFromItems(rootItem);
+
+        GetSummary(rootItem);
 
         currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.OrderDate));
         foreach (var task in currentList)
@@ -980,7 +986,10 @@ public partial class MainPage : ContentPage
         return path;
     }
 
-
+    /// <summary>
+    /// Nächstze offene Termine hochreichen
+    /// </summary>
+    /// <param name="item"></param>
     void GetNextDateFromItems(MyTask item)
     {
         if (IsResponsible(item))
@@ -1020,8 +1029,46 @@ public partial class MainPage : ContentPage
         }
     }
 
+    void GetSummary(MyTask item)
+    {
+        double summary = 0;
+        string unit = "";
+        foreach (var subItem in tasks.Where(x => x.parentid == item.gid))
+        {
+            GetSummary(subItem);
+            if (subItem.name != null)
+            {
+                var split = subItem.name.Split(" ");
+                double n;
+                if (split.Length > 2 && double.TryParse(split[split.Length - 2], out n) && unit != null)
+                {
+                    summary += n;
+                    unit = split[split.Length - 1];
+                }
+                else
+                {
+                    unit = null;
+                };
+            }
+        }
+        if (summary != 0 && unit != null && item.name != null)
+        {
+            var split = item.name.Split(" ");
+            if (split[split.Length - 1] == unit)
+            {
+                item.name = "";
+                for (int i = 0; i < split.Length - 2; i++)
+                {
+                    item.name += split[i] + " ";
+                }
+            }
+            item.name = item.name.TrimEnd() + " " + summary + " " + unit;
+        }
+    }
+
+
     /// <summary>
-    /// Prüfen, ob man selber zustämdig ist. Wenn nicht, dann den Termin ignorieren
+    /// Prüfen, ob man selber zuständig ist. Wenn nicht, dann den Termin ignorieren
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
