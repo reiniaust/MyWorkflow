@@ -7,7 +7,7 @@
     Shell.FlyoutBehavior="Disabled">
 
     <ShellContent
-        Title="MyWorkflow 1.4"
+        Title="MyWorkflow 1.5"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 
