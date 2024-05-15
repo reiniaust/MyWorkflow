@@ -475,6 +475,8 @@ public partial class MainPage : ContentPage
 
         ReadAllAssana();
 
+        ReadControlling();
+
         LoadCurrentList();
     }
 
@@ -1049,5 +1051,50 @@ public partial class MainPage : ContentPage
         lblStatus.Text = text;
     }
 
+    public async Task ReadControlling()
+    {
+        var options = new RestClientOptions();
+        options = new RestClientOptions("http://localhost:1024/view/v_AuftraegeOffen");
+
+        var client = new RestClient(options);
+        var request = new RestRequest("");
+        request.AddHeader("accept", "application/json");
+        var response = await client.GetAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var auftrResponse = JsonSerializer.Deserialize<AuftragResponse>(response.Content);
+
+            var kdRoot = tasks.FirstOrDefault(i => i.name == "Kunden");
+            if (kdRoot != null)
+            {
+                foreach (var item in tasks.Where(x => x.parentid == kdRoot.gid && x.name.Contains(":")))
+                {
+                    var prjNr = item.name.Split(":")[0];
+                    MyTask offenRoot;
+                    offenRoot = tasks.FirstOrDefault(i => i.parentid == item.gid && i.name.StartsWith("Offen"));
+                    if (offenRoot == null)
+                    {
+                        offenRoot = new() {
+                            gid = random.Next(idFrom, idTo).ToString(),
+                            parentid = item.gid,
+                            name = "Offene Aufträge"
+                        };
+                        tasks.Add(offenRoot);
+                    }
+
+                    foreach (var auftrag in auftrResponse.recordset.Where(x => x.projektNr == prjNr))
+                    {
+                        tasks.Add(new()
+                        {
+                            gid = random.Next(idFrom, idTo).ToString(),
+                            parentid = offenRoot.gid,
+                            name = "Auftrag " + auftrag.hotlineNr + ": " + auftrag.titel
+                        });
+                    }
+                }
+            }
+        }
+    }
 }
 
