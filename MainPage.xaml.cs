@@ -556,7 +556,7 @@ public partial class MainPage : ContentPage
 
         GetNextDateFromItems(rootItem);
 
-        //GetSummary(rootItem);
+        GetSummary(rootItem);
 
         currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.OrderDate));
         foreach (var task in currentList)
@@ -1168,6 +1168,7 @@ public partial class MainPage : ContentPage
                                             auftr.name = auftr.name.Substring(0, 99) + "...";
                                             auftr.notes = "..." + auftr.name.Substring(100);
                                         }
+                                        auftr.name += " " + i4.AngebDm + " €";
                                         auftr.created_at = MyDateConvert(i4.BestellDatum);
                                         if (i4.AendDatum != null)
                                         {
