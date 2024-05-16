@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MyWorkflow
 {
     public class Auftrag
     {
-        public string hotlineNr { get; set; }
+        [property: JsonPropertyName("hotlineNr")]
+        public string HotlineNr { get; set; }
         public string projektNr { get; set; }
         public string auftragsart { get; set; }
         public string bestellArt { get; set; }
@@ -21,6 +24,7 @@ namespace MyWorkflow
         public string woche { get; set; }
         public string erlDatum { get; set; }
         public string vermerk { get; set; }
+        public string test { get; set; }
     }
     public class AuftragResponse
     {
