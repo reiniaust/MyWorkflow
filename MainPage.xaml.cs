@@ -1118,9 +1118,6 @@ public partial class MainPage : ContentPage
 
         if (response.IsSuccessStatusCode)
         {
-            var auftrResponse = JsonSerializer.Deserialize<AuftragResponse>(response.Content);
-            
-
             var kdRoot = tasks.FirstOrDefault(i => i.name == "Kunden");
             if (kdRoot != null)
             {
@@ -1187,10 +1184,49 @@ public partial class MainPage : ContentPage
                         break;
                     }
                 }
-
-                SaveItems();
             }
         }
+
+        // MitarbeiterKtl
+        options = new RestClientOptions("http://localhost:1024/view/v_Tatetigkeiten_Ab2015_TextLaengeGr50");
+        client = new RestClient(options);
+        response = await client.GetAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var ktlRoot = tasks.FirstOrDefault(i => i.name == "Buchungen" && ItemPathLeftToRight(i).Contains("Service"));
+            if (ktlRoot != null)
+            {
+                dynamic dynJson = Newtonsoft.Json.JsonConvert.DeserializeObject(response.Content);
+                foreach (var i1 in dynJson)
+                {
+                    foreach (var i2 in i1)
+                    {
+                        foreach (var i3 in i2)
+                        {
+                            foreach (var i4 in i3)
+                            {
+                                MyTask ttk = new();
+                                ttk.gid = i4.SatzId;
+                                ttk.parentid = ktlRoot.gid;
+                                ttk.name = i4.Taetigkeit;
+                                if (i4.Kunde != null)
+                                {
+                                    ttk.name += ": " + i4.Kunde;
+                                }
+                                ttk.created_at = MyDateConvert(i4.Datum);
+                                tasks.Add(ttk);
+                            }
+                            break;
+                        }
+                        break;
+                    }
+                    break;
+                }
+            }
+        }
+
+        SaveItems();
 
         string MyDateConvert(string dateString)
         {
