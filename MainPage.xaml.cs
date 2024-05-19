@@ -462,6 +462,10 @@ public partial class MainPage : ContentPage
             jsonString = File.ReadAllText(Path.Combine(docPath, "MyWorkflowData.json"));
             //tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
             tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
+
+            // verwaiste Datensätze löschen
+            tasks = tasks.Where(x => ItemPathLeftToRight(x) != null).ToList();
+            tasks = tasks.Where(x => !(x.notes != null && x.notes.Contains("[nicht aktualisiert"))).ToList();
         }
         catch (Exception)
         {
@@ -971,6 +975,7 @@ public partial class MainPage : ContentPage
                 path = task.name + ">" + path;
             }
         }
+        if (task == null) { path = null; }
         return path;
     }
 
