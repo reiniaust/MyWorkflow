@@ -392,7 +392,7 @@ public partial class MainPage : ContentPage
             }
             btnCut.IsVisible = !editStatus;
             btnAddLink.IsVisible = !editStatus && linkToItem == null;
-            btnDeleteLink.IsVisible = !editStatus && linkToItem != null;
+            btnDeleteLink.IsVisible = !editStatus && currentItem.dependencies.Count > 0;
             btnDelete.IsVisible = !editStatus;
         }
 
@@ -785,6 +785,16 @@ public partial class MainPage : ContentPage
                         subtask.dependencies.Add(depResponse.data[i].gid);
                     } 
                     */
+                    subtask.dependencies = new List<string>();
+                    if (subtask.notes != null && subtask.notes.Contains("|"))
+                    {
+                        string[] depIds = subtask.notes.Split("|")[1].Split(",");
+                        for (int i = 0; i < depIds.Length; i++)
+                        {
+                            subtask.dependencies.Add(depIds[i]);
+                        }
+                        subtask.notes = subtask.notes.Split("|")[0];
+                    }
 
                     var updTask = tasks.Find(x => x.gid == subtask.gid);
                     if (updTask != null)
@@ -884,6 +894,20 @@ public partial class MainPage : ContentPage
             }
         }
 
+        // Abhängigkeiten speichern
+        for (int i = 0; i < task.dependencies.Count; i++)
+        {
+            if (i == 0)
+            {
+                task.notes += "|";
+            }
+            task.notes += task.dependencies[i];
+            if (i < task.dependencies.Count - 1)
+            {
+                task.notes += ",";
+            }
+        }
+
 
         if (operation == "add" || operation == "update")
         {
@@ -946,6 +970,7 @@ public partial class MainPage : ContentPage
         }
 
         // Abhängigkeiten speichern
+        /*
         if (operation == "setDependence")
         {
             url = "https://app.asana.com/api/1.0/tasks/" + task.gid + "/addDependencies";
@@ -958,6 +983,7 @@ public partial class MainPage : ContentPage
                 SetStatus(response.Content.ToString());
             }
         }
+        */
 
     }
 
