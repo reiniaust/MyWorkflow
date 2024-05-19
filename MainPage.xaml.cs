@@ -3,13 +3,10 @@ using System.IO;
 using static System.Net.Mime.MediaTypeNames;
 using Asana.Net;
 using System.Text.Json;
+//using Newtonsoft.Json;
 using RestSharp;
-using System.ComponentModel.Design;
 using System.Globalization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Xml.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging.Abstractions;
+//using Google.Android.Material.Tabs;
 //using Syncfusion.Maui.Inputs;
 
 namespace MyWorkflow;
@@ -738,7 +735,7 @@ public partial class MainPage : ContentPage
 
         void SetTasksToNotRefreshed(MyTask item, string text)
         {
-            foreach (var subItem in tasks.Where(x => x.parentid == item.gid))
+            foreach (var subItem in tasks.Where(x => x.parentid == item.gid && x.gid.Length > idTo.ToString().Length))
             {
                 subItem.notes += text;
                 SetTasksToNotRefreshed(subItem, text);
@@ -999,40 +996,50 @@ public partial class MainPage : ContentPage
     /// <param name="item"></param>
     void GetNextDateFromItems(MyTask item)
     {
-        if (IsResponsible(item))
+        try
         {
-            foreach (var subItem in tasks.Where(x => x.parentid == item.gid))
+            if (IsResponsible(item))
             {
-                GetNextDateFromItems(subItem);
-                if (!subItem.completed && subItem.next_due_on != null)
+                foreach (var subItem in tasks.Where(x => x.parentid == item.gid))
                 {
-                    if (item.next_due_on == null)
+                    GetNextDateFromItems(subItem);
+                    if (!subItem.completed && subItem.next_due_on != null)
                     {
-                        item.next_due_on = subItem.next_due_on;
-                    }
-                    else
-                    {
-                        if (DateTime.Parse(subItem.next_due_on) < DateTime.Parse(item.next_due_on))
+                        if (item.next_due_on == null)
                         {
                             item.next_due_on = subItem.next_due_on;
                         }
+                        else
+                        {
+                            if (DateTime.Parse(subItem.next_due_on) < DateTime.Parse(item.next_due_on))
+                            {
+                                item.next_due_on = subItem.next_due_on;
+                            }
+                        }
                     }
                 }
-            }
-            if (item.due_on != null)
-            {
-                if (item.next_due_on != null)
+                if (item.due_on != null)
                 {
-                    if (DateTime.Parse(item.due_on) < DateTime.Parse(item.next_due_on))
+                    if (item.next_due_on != null)
+                    {
+                        DateTime due_on;
+                        if (DateTime.TryParse(item.due_on, out due_on))
+                        {
+                            if (due_on < DateTime.Parse(item.next_due_on))
+                            {
+                                item.next_due_on = item.due_on;
+                            }
+                        }
+                    }
+                    else
                     {
                         item.next_due_on = item.due_on;
                     }
                 }
-                else
-                {
-                    item.next_due_on = item.due_on;
-                }
             }
+        }
+        catch (Exception)
+        {
         }
     }
 
@@ -1103,6 +1110,7 @@ public partial class MainPage : ContentPage
         lblStatus.Text = text;
     }
 
+
     public async Task ReadControlling()
     {
         var options = new RestClientOptions();
@@ -1115,8 +1123,6 @@ public partial class MainPage : ContentPage
 
         if (response.IsSuccessStatusCode)
         {
-            var auftrResponse = JsonSerializer.Deserialize<AuftragResponse>(response.Content);
-
             var kdRoot = tasks.FirstOrDefault(i => i.name == "Kunden");
             if (kdRoot != null)
             {
@@ -1135,17 +1141,103 @@ public partial class MainPage : ContentPage
                         tasks.Add(offenRoot);
                     }
 
-                    foreach (var auftrag in auftrResponse.recordset.Where(x => x.projektNr == prjNr))
+                    tasks = tasks.Where(x => x.parentid != offenRoot.gid).ToList(); // löschen
+
+                    dynamic dynJson = Newtonsoft.Json.JsonConvert.DeserializeObject(response.Content);
+                    foreach (var i1 in dynJson)
                     {
-                        tasks.Add(new()
+                        foreach (var i2 in i1)
                         {
-                            gid = random.Next(idFrom, idTo).ToString(),
-                            parentid = offenRoot.gid,
-                            name = "Auftrag " + auftrag.hotlineNr + ": " + auftrag.titel
-                        });
+                            foreach (var i3 in i2)
+                            {
+                                foreach (var i4 in i3)
+                                {
+                                    if (i4.ProjektNr == prjNr)
+                                    {
+                                        string auftrNr = "Auftrag " + i4.HotlineNr + ": ";
+                                        MyTask auftr;
+                                        auftr = tasks.FirstOrDefault(i => i.name.StartsWith(auftrNr));
+                                        if (auftr == null)
+                                        {
+                                            auftr = new();
+                                            auftr.gid = random.Next(idFrom, idTo).ToString();
+                                            tasks.Add(auftr);
+                                        }
+                                        auftr.parentid = offenRoot.gid;
+                                        auftr.name = auftrNr + i4.Titel;
+                                        if (auftr.name.Length > 100)
+                                        {
+                                            auftr.name = auftr.name.Substring(0, 99) + "...";
+                                            auftr.notes = "..." + auftr.name.Substring(100);
+                                        }
+                                        auftr.name += " " + i4.AngebDm + " €";
+                                        auftr.created_at = MyDateConvert(i4.BestellDatum);
+                                        if (i4.AendDatum != null)
+                                        {
+                                            auftr.modified_at = MyDateConvert(i4.AendDatum);
+                                        }
+                                        if (i4.Termin != null)
+                                        {
+                                            auftr.due_on = MyDateConvert(i4.Termin);
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                            break;
+                        }
+                        break;
                     }
                 }
             }
+        }
+
+        // MitarbeiterKtl
+        options = new RestClientOptions("http://localhost:1024/view/v_Tatetigkeiten_Ab2015_TextLaengeGr50");
+        client = new RestClient(options);
+        response = await client.GetAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var ktlRoot = tasks.FirstOrDefault(i => i.name == "Buchungen" && ItemPathLeftToRight(i).Contains("Service"));
+            if (ktlRoot != null)
+            {
+                dynamic dynJson = Newtonsoft.Json.JsonConvert.DeserializeObject(response.Content);
+                foreach (var i1 in dynJson)
+                {
+                    foreach (var i2 in i1)
+                    {
+                        foreach (var i3 in i2)
+                        {
+                            foreach (var i4 in i3)
+                            {
+                                MyTask ttk = new();
+                                ttk.gid = i4.SatzId;
+                                ttk.parentid = ktlRoot.gid;
+                                ttk.name = i4.Taetigkeit;
+                                if (i4.Kunde != null)
+                                {
+                                    ttk.name += ": " + i4.Kunde;
+                                }
+                                ttk.created_at = MyDateConvert(i4.Datum);
+                                tasks.Add(ttk);
+                            }
+                            break;
+                        }
+                        break;
+                    }
+                    break;
+                }
+            }
+        }
+
+        SaveItems();
+
+        string MyDateConvert(string dateString)
+        {
+            string[] d = ((string)dateString).Split("/");
+            DateTime date = DateTime.Parse(d[1] + "." + d[0] + "." + d[2]);
+            return date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'").Split(" ")[0];
         }
     }
 }
