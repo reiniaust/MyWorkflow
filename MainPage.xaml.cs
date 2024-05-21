@@ -1219,13 +1219,13 @@ public partial class MainPage : ContentPage
         }
 
         // MitarbeiterKtl
-        options = new RestClientOptions("http://localhost:1024/view/v_Tatetigkeiten_Ab2015_TextLaengeGr50");
+        options = new RestClientOptions("http://localhost:1024/view/v_Ktl_TtkOhneAuftr_Ab2015_TextLaengeGr50");
         client = new RestClient(options);
         response = await client.GetAsync(request);
 
         if (response.IsSuccessStatusCode)
         {
-            var ktlRoot = tasks.FirstOrDefault(i => i.name == "Buchungen" && ItemPathLeftToRight(i).Contains("Service"));
+            var ktlRoot = tasks.FirstOrDefault(i => i.name.StartsWith("Buchungen") && ItemPathLeftToRight(i).Contains("Service"));
             if (ktlRoot != null)
             {
                 dynamic dynJson = Newtonsoft.Json.JsonConvert.DeserializeObject(response.Content);
@@ -1235,18 +1235,36 @@ public partial class MainPage : ContentPage
                     {
                         foreach (var i3 in i2)
                         {
+                            int maxId = 1362941;
+                            foreach (MyTask buchung in tasks.Where(x => x.parentid == ktlRoot.gid))
+                            {
+                                if (int.Parse(buchung.gid) > maxId)
+                                {
+                                    maxId = int.Parse(buchung.gid);
+                                }
+                            }
+
                             foreach (var i4 in i3)
                             {
-                                MyTask ttk = new();
-                                ttk.gid = i4.SatzId;
-                                ttk.parentid = ktlRoot.gid;
-                                ttk.name = i4.Taetigkeit;
-                                if (i4.Kunde != null)
+                                string ktlId = i4.SatzId;
+                                if (i4.Kuerzel != "ra" && int.Parse(ktlId) > maxId)
                                 {
-                                    ttk.name += ": " + i4.Kunde;
+                                    MyTask ttk = new();
+                                    ttk.gid = i4.SatzId;
+                                    ttk.parentid = ktlRoot.gid;
+                                    ttk.name = i4.Kuerzel + ": " + i4.Taetigkeit;
+                                    string kd = i4.Kunde;
+                                    if (kd != null)
+                                    {
+                                        ttk.name += ": " + kd;
+                                    }
+                                    string dauer = i4.DauerStd;
+                                    dauer = dauer.Replace(".", ",");
+                                    ttk.name += ": " + Math.Round(float.Parse(dauer),2) + " Std";
+                                    ttk.notes = i4.Text;
+                                    ttk.created_at = MyDateConvert(i4.Datum);
+                                    tasks.Add(ttk);
                                 }
-                                ttk.created_at = MyDateConvert(i4.Datum);
-                                tasks.Add(ttk);
                             }
                             break;
                         }
