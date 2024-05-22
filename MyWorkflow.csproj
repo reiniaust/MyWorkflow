@@ -29,7 +29,7 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
-		<GenerateAppInstallerFile>True</GenerateAppInstallerFile>
+		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
@@ -37,7 +37,7 @@
 		<GenerateTestArtifacts>True</GenerateTestArtifacts>
 		<AppInstallerUri>C:\Users\ra\source\repos\MyWorkflow</AppInstallerUri>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-		<PackageCertificateKeyFile>MyWorkflow_TemporaryKey.pfx</PackageCertificateKeyFile>
+		<PackageCertificateThumbprint>C20D40D2F53C10D52D3919890F751FFFBE4B7D8A</PackageCertificateThumbprint>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -51,8 +51,8 @@
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appicon.svg" Color="#512BD4" />
 
 		<!-- Splash Screen 
-		-->
 		<MauiSplashScreen Include="Resources\AppIcon\appicon.svg" Color="#512BD4" BaseSize="128,128" />
+		-->
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
