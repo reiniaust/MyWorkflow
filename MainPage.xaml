@@ -35,10 +35,13 @@
                     TextChanged="searchBar_TextChanged" 
                     Focused="searchBar_Focused"
                     SearchButtonPressed="searchBar_SearchButtonPressed"/>
-                <Label x:Name="lblPath"></Label>
 
                 <HorizontalStackLayout
-                Spacing="5">
+                    x:Name="stackPath"
+                    Spacing="5"/>
+
+                <HorizontalStackLayout
+                    Spacing="5">
 
                     <Button
                         x:Name="btnRefresh"

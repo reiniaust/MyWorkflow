@@ -146,10 +146,7 @@ public partial class MainPage : ContentPage
     */
     private void searchBar_SearchButtonPressed(object sender, EventArgs e)
     {
-        if (searchBar.Text == "*")
-        {
-            searchText = "";
-        }
+        searchText = searchText.Replace("*", "");
         int i = 0;
         foreach (var task in tasks.Where(x => isSearchInTitem(x))
             .OrderByDescending(x => x.modified_at == null ? x.created_at : x.modified_at))
@@ -368,11 +365,12 @@ public partial class MainPage : ContentPage
         editorNotes.IsVisible = editStatus || currentItem.notes != "";
         stack_Due_on_Completed.IsVisible = editStatus || currentItem.due_on != null;
 
-        btnBack.IsVisible = !editStatus || linkToItem != null;
+        //btnBack.IsVisible = !editStatus || linkToItem != null;
+        btnBack.IsVisible = false;
         //btnSearch.IsVisible = !editStatus || linkToItem != null;
         if (currentItem.gid == "")
         {
-            btnBack.IsVisible = false;
+            //btnBack.IsVisible = false;
             btnEdit.IsVisible = false;
             btnExpandMore.IsVisible = false;
             btnExpandLess.IsVisible = false;
@@ -591,13 +589,48 @@ public partial class MainPage : ContentPage
 
         checkCompleted.IsChecked = currentItem.completed;
 
-        lblPath.Text = ItemPathLeftToRight(currentItem);
+        //lblPath.Text = ItemPathLeftToRight(currentItem);
+        PathButtons();
+
+
         if (currentItem.gid != "")
         {
             btnBack.IsEnabled = true;
         }
         //editorNotes.Focus();
         loadStatus = false;
+    }
+
+    private void PathButtons()
+    {
+        List<Button> buttons = new List<Button>();
+        MyTask item = currentItem;
+        while (item != null)
+        {
+            string btnText = item.name;
+            if (item.name == "")
+            {
+                btnText = "Home";
+            }
+            Button button = new Button() { Text = btnText, MaximumHeightRequest = 10 };
+            button.AutomationId = item.gid;
+            button.Clicked += btnPath_Clicked;
+            buttons.Add(button);
+            item = tasks.FirstOrDefault(i => i.gid == item.parentid);
+        }
+
+        stackPath.Clear();
+        for (int i = buttons.Count - 1; i >= 0; i--)
+        {
+            stackPath.Add(buttons[i]);
+        }
+    }
+
+    private void btnPath_Clicked(object sender, EventArgs e)
+    {
+        Button btn = sender as Button;
+        currentItem = tasks.Find(x => x.gid == btn.AutomationId);
+        LoadCurrentList();
     }
 
     private void SaveTask(string operation, MyTask item)
@@ -985,6 +1018,19 @@ public partial class MainPage : ContentPage
         }
         */
 
+    }
+    public string ItemPathIdsLeftToRight(MyTask task)
+    {
+        string path = "";
+        while (task != null && task.parentid != null)
+        {
+            task = tasks.FirstOrDefault(i => i.gid == task.parentid);
+            if (task != null)
+            {
+                path = task.gid + path + ",";
+            }
+        }
+        return path;
     }
 
     public string ItemPathLeftToRight(MyTask task)
