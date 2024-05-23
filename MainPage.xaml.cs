@@ -36,6 +36,7 @@ public partial class MainPage : ContentPage
     bool editStatus;
     bool loadStatus;
     bool hasNews;
+    List<MyTask> synonyms; 
 
     public MainPage()
 	{
@@ -69,17 +70,6 @@ public partial class MainPage : ContentPage
             StartUp();
         }
     }
-
-    /*
-    private void entryText_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (entryText.Text != null && entryText.Text != currentItem.name)
-        {
-            searchText = entryText.Text;
-            searchCounter = 0;
-        }
-    }
-    */
 
     private void searchBar_TextChanged(object sender, TextChangedEventArgs e)
     {
@@ -127,26 +117,17 @@ public partial class MainPage : ContentPage
         StartUp();
     }
 
-    /*
-    private void btnSearch_Clicked(object sender, EventArgs e)
-    {
-        int i = 0;
-        foreach (var task in tasks.Where(x => isSearchInTitem(x))
-            .OrderByDescending(x => x.modified_at == null ? x.created_at : x.modified_at))
-        {
-            if (i == searchCounter)
-            {
-                currentItem = task;
-            }
-            i += 1;
-        }
-        searchCounter++;
-        LoadCurrentList();
-    }
-    */
+    // Suchen
     private void searchBar_SearchButtonPressed(object sender, EventArgs e)
     {
         searchText = searchText.Replace("*", "");
+
+        MyTask synRoot = tasks.Find(x => x.name == "Synonyme");
+        if (synRoot != null) 
+        {
+            synonyms = tasks.Where(x => x.parentid == synRoot.gid).ToList();
+        }
+
         int i = 0;
         foreach (var task in tasks.Where(x => isSearchInTitem(x))
             .OrderByDescending(x => x.modified_at == null ? x.created_at : x.modified_at))
@@ -168,7 +149,7 @@ public partial class MainPage : ContentPage
         foreach (var word in words)
         {
             //if (searchText == "" || (item.name != null && item.name.Contains(words[0], StringComparison.OrdinalIgnoreCase)))
-            if (searchText == "" || (searchIn(item).Contains(word, StringComparison.OrdinalIgnoreCase)))
+            if (searchText == "" || wordFound(searchIn(item), word))
             {
                 found = true; break;
             }
@@ -177,7 +158,7 @@ public partial class MainPage : ContentPage
         {
             foreach (var word in words)
             {
-                if (!(ItemPathLeftToRight(item) + searchIn(item)).Contains(word, StringComparison.OrdinalIgnoreCase))
+                if (!(wordFound((ItemPathLeftToRight(item) + searchIn(item)), word)))
                 {
                     found = false; break;
                 }
@@ -200,6 +181,28 @@ public partial class MainPage : ContentPage
         return searchIn;
     }
 
+    bool wordFound(string text, string word)
+    {
+        bool found;
+        found = text.Contains(word, StringComparison.OrdinalIgnoreCase);
+        if (!found)
+        {
+            MyTask synItem = synonyms.Find(x  => x.name.Contains(word, StringComparison.OrdinalIgnoreCase));
+            if (synItem != null) 
+            { 
+                foreach(string synWord in synItem.name.Split("|"))
+                {
+                    found = text.Contains(synWord, StringComparison.OrdinalIgnoreCase);
+                    if (found)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        return found;
+    }
+
     private void btnBack_Clicked(object sender, EventArgs e)
     {
         if (currentItem.parentid != null)
@@ -219,7 +222,6 @@ public partial class MainPage : ContentPage
         editorNotes.Text = "";
         entry_Due_on.Text = "";
         entryText.Focus();
-
     }
 
 
@@ -503,6 +505,8 @@ public partial class MainPage : ContentPage
             currentItem = tasks.Find(x => x.gid == "");
         }
 
+        lblCurrentTitle.Text = currentItem.name;
+
         tasks.ForEach(x =>
         {
             if (x.name == null) x.name = "";
@@ -563,8 +567,9 @@ public partial class MainPage : ContentPage
         currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.OrderDate));
         foreach (var task in currentList)
         {
-            if (task.notes != null && task.notes != "" || tasks.Find(x => x.parentid == task.gid) != null)
+            if (task.notes != null && task.notes != "" && !task.notes.StartsWith("Erstellt am") || tasks.Find(x => x.parentid == task.gid) != null)
             {
+                // Plus anzeigen, wenn Unterpunkte oder Inhalt hinterlegt ist
                 task.NameInList = "+ " + task.name;
             }
             else
@@ -589,7 +594,7 @@ public partial class MainPage : ContentPage
 
         checkCompleted.IsChecked = currentItem.completed;
 
-        //lblPath.Text = ItemPathLeftToRight(currentItem);
+        // Pfad mit Buttons anzeigen
         PathButtons();
 
 
@@ -605,8 +610,9 @@ public partial class MainPage : ContentPage
     {
         List<Button> buttons = new List<Button>();
         MyTask item = currentItem;
-        while (item != null)
+        while (item != null && item.name != "")
         {
+            item = tasks.FirstOrDefault(i => i.gid == item.parentid);
             string btnText = item.name;
             if (item.name == "")
             {
@@ -616,7 +622,6 @@ public partial class MainPage : ContentPage
             button.AutomationId = item.gid;
             button.Clicked += btnPath_Clicked;
             buttons.Add(button);
-            item = tasks.FirstOrDefault(i => i.gid == item.parentid);
         }
 
         stackPath.Clear();
@@ -665,19 +670,6 @@ public partial class MainPage : ContentPage
         File.WriteAllText(Path.Combine(docPath, "MyWorkflowData.json"), JsonSerializer.Serialize(tasks));
         File.WriteAllText(Path.Combine(docPath, "MyWorkflowData" + DateTime.Today.ToString().Split(" ")[0].Replace("/", "") + ".json"), JsonSerializer.Serialize(tasks));
     }
-
-    private void searchBar_Focused(object sender, FocusEventArgs e)
-    {
-        /*
-        Dispatcher.Dispatch(() =>
-        {
-            var entry = sender as Entry;
-            entry.CursorPosition = 0;
-            entry.SelectionLength = entry.Text == null ? 0 : entry.Text.Length;
-        });
-        */
-    }
-
 
     private async Task ReadAsana(MyTask rootTask)
     {
