@@ -33,12 +33,7 @@
                 <SearchBar 
                     x:Name="searchBar" 
                     TextChanged="searchBar_TextChanged" 
-                    Focused="searchBar_Focused"
                     SearchButtonPressed="searchBar_SearchButtonPressed"/>
-
-                <HorizontalStackLayout
-                    x:Name="stackPath"
-                    Spacing="5"/>
 
                 <HorizontalStackLayout
                     Spacing="5">
@@ -112,6 +107,12 @@
                         Clicked="btnDelete_Clicked" />
 
                 </HorizontalStackLayout>
+
+                <HorizontalStackLayout
+                    x:Name="stackPath"
+                    Spacing="5"/>
+
+                <Label x:Name="lblCurrentTitle" FontSize="Title"></Label>
 
                 <Entry
                     x:Name="entryText"
