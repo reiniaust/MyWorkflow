@@ -612,7 +612,7 @@ public partial class MainPage : ContentPage
             {
                 btnText = "Home";
             }
-            Button button = new Button() { Text = btnText, MaximumHeightRequest = 10 };
+            Button button = new Button() { Text = btnText };
             button.AutomationId = item.gid;
             button.Clicked += btnPath_Clicked;
             buttons.Add(button);
