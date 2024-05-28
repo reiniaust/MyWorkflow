@@ -445,6 +445,8 @@ public partial class MainPage : ContentPage
 
     private void StartUp()
     {
+        EmailTest();
+
         startEamilView.IsVisible = false;
         mainView.IsVisible = true;
 
@@ -1320,6 +1322,21 @@ public partial class MainPage : ContentPage
             string[] d = ((string)dateString).Split("/");
             DateTime date = DateTime.Parse(d[1] + "." + d[0] + "." + d[2]);
             return date.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'").Split(" ")[0];
+        }
+    }
+
+    public async Task EmailTest()
+    {
+        var emailReaderService = new EmailReaderService();
+        var emails = await emailReaderService.GetEmailsAsync("imap.ionos.com", 993, "r.austermeier@sd-software.de", "Sces04ok!");
+
+        foreach (var email in emails)
+        {
+            Console.WriteLine($"Subject: {email.Subject}");
+            Console.WriteLine($"From: {email.From}");
+            Console.WriteLine($"Date: {email.Date}");
+            Console.WriteLine($"Body: {email.TextBody}");
+            Console.WriteLine();
         }
     }
 }
