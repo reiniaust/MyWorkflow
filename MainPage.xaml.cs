@@ -1285,7 +1285,7 @@ public partial class MainPage : ContentPage
                             foreach (var i4 in i3)
                             {
                                 string ktlId = i4.SatzId;
-                                if (i4.Kuerzel != "ra" && int.Parse(ktlId) > maxId)
+                                if (int.Parse(ktlId) > maxId)
                                 {
                                     MyTask ttk = new();
                                     ttk.gid = i4.SatzId;
