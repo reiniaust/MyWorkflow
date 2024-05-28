@@ -445,7 +445,6 @@ public partial class MainPage : ContentPage
 
     private void StartUp()
     {
-        EmailTest();
 
         startEamilView.IsVisible = false;
         mainView.IsVisible = true;
@@ -483,6 +482,8 @@ public partial class MainPage : ContentPage
         ReadAllAssana();
 
         ReadControlling();
+        
+        ReadEmails();
 
         LoadCurrentList();
     }
@@ -1325,18 +1326,52 @@ public partial class MainPage : ContentPage
         }
     }
 
-    public async Task EmailTest()
+    public async Task ReadEmails()
     {
-        var emailReaderService = new EmailReaderService();
-        var emails = await emailReaderService.GetEmailsAsync("imap.ionos.com", 993, "r.austermeier@sd-software.de", "Sces04ok!");
-
-        foreach (var email in emails)
+        MyTask mailSettings = tasks.Find(x => x.name == "Posteingang (IMAP)");
+        if (mailSettings != null)
         {
-            Console.WriteLine($"Subject: {email.Subject}");
-            Console.WriteLine($"From: {email.From}");
-            Console.WriteLine($"Date: {email.Date}");
-            Console.WriteLine($"Body: {email.TextBody}");
-            Console.WriteLine();
+            string[] settings = mailSettings.notes.Split(",");
+            var emailReaderService = new EmailReaderService();
+            var emails = await emailReaderService.GetEmailsAsync(settings[0], int.Parse(settings[1]), settings[2].Trim(), settings[3].Trim());
+
+            foreach (var email in emails)
+            {
+                if (email.From.ToString().Split("<").Count() > 1)
+                {
+                    MyTask mailFrom = tasks.Find(x => x.name.Contains(email.From.ToString().Split("<")[1]));
+                    if (mailFrom != null)
+                    {
+                        MyTask mailRoot = tasks.Find(x => x.parentid == mailFrom.gid && x.name == "E-Mails");
+                        if (mailRoot == null) { 
+                            mailRoot = new()
+                            {
+                                gid = random.Next(idFrom, idTo).ToString(),
+                                parentid = mailFrom.gid,
+                                name = "E-Mails"
+                            };
+                            tasks.Add(mailRoot);
+                        }
+                        MyTask mail = new()
+                        {
+                            gid = random.Next(idFrom, idTo).ToString(),
+                            parentid = mailRoot.gid,
+                            created_at = email.Date.ToString("yyyy-MM-ddTHH\\:mm\\:ss", CultureInfo.InvariantCulture),
+                            name = email.Subject,
+                            notes = email.Body.ToString().Split("Mit freundl")[0],
+                        };
+                        if (mail.notes.Split("8bit").Count() > 1)
+                        {
+                            mail.notes = mail.notes.Split("8bit")[1].Trim();
+                        }
+                        if (mail.notes.Split("printable").Count() > 1)
+                        {
+                            mail.notes = mail.notes.Split("printable")[1].Trim();
+                        }
+                        tasks.Add(mail);
+                    }
+                }
+            }
         }
     }
 }
