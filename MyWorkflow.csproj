@@ -37,7 +37,7 @@
 		<GenerateTestArtifacts>True</GenerateTestArtifacts>
 		<AppInstallerUri>C:\Users\ra\source\repos\MyWorkflow</AppInstallerUri>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-		<PackageCertificateThumbprint>C20D40D2F53C10D52D3919890F751FFFBE4B7D8A</PackageCertificateThumbprint>
+		<PackageCertificateThumbprint>8E1633AA151024496B010798FC608922A72580EC</PackageCertificateThumbprint>
 	</PropertyGroup>
 
 	<ItemGroup>

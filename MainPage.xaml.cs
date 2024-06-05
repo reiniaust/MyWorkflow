@@ -362,7 +362,7 @@ public partial class MainPage : ContentPage
 
     void setButtonStatus()
     {
-        searchBar.IsVisible = !editStatus;
+        //searchBar.IsVisible = !editStatus;
         entryText.IsVisible = editStatus;
         editorNotes.IsVisible = editStatus || currentItem.notes != "";
         stack_Due_on_Completed.IsVisible = editStatus || currentItem.due_on != null;
@@ -1110,6 +1110,7 @@ public partial class MainPage : ContentPage
         }
     }
 
+    // Summen hochreichen
     void GetSummary(MyTask item)
     {
         double summary = 0;
@@ -1129,6 +1130,7 @@ public partial class MainPage : ContentPage
                 else
                 {
                     unit = null;
+                    break;
                 };
             }
         }
@@ -1143,6 +1145,7 @@ public partial class MainPage : ContentPage
                     item.name += split[i] + " ";
                 }
             }
+            summary = Math.Round(summary, 2);
             item.name = item.name.TrimEnd() + " " + summary + " " + unit;
         }
     }
