@@ -6,6 +6,7 @@ using System.Text.Json;
 //using Newtonsoft.Json;
 using RestSharp;
 using System.Globalization;
+using System.Threading.Tasks;
 //using Google.Android.Material.Tabs;
 //using Syncfusion.Maui.Inputs;
 
@@ -109,6 +110,7 @@ public partial class MainPage : ContentPage
         {
             currentItem = item;
         }
+
         LoadCurrentList();
     }
 
@@ -567,6 +569,12 @@ public partial class MainPage : ContentPage
 
         GetSummary(rootItem);
 
+        string clipboard = currentItem.name;
+        if (currentItem.notes != null && currentItem.notes != "" && !currentItem.notes.StartsWith("Erstellt am"))
+        {
+            clipboard += System.Environment.NewLine + currentItem.notes;
+        }
+
         currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.OrderDate));
         foreach (var task in currentList)
         {
@@ -579,7 +587,16 @@ public partial class MainPage : ContentPage
             {
                 task.NameInList = task.name;
             }
+
+            clipboard += System.Environment.NewLine + "- " + task.name;
+            if (task.notes != null && task.notes != "" && !task.notes.StartsWith("Erstellt am"))
+            {
+                clipboard += System.Environment.NewLine + "  " + task.notes;
+            }
         }
+
+        Clipboard.Default.SetTextAsync(clipboard);
+
         myListView.ItemsSource = currentList;
         
         entryText.Text = currentItem.name;
@@ -1377,5 +1394,6 @@ public partial class MainPage : ContentPage
             }
         }
     }
+
 }
 

@@ -37,7 +37,7 @@
 		<GenerateTestArtifacts>True</GenerateTestArtifacts>
 		<AppInstallerUri>C:\Users\ra\source\repos\MyWorkflow</AppInstallerUri>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-		<PackageCertificateThumbprint>8E1633AA151024496B010798FC608922A72580EC</PackageCertificateThumbprint>
+		<PackageCertificateKeyFile>MyWorkflow_TemporaryKey.pfx</PackageCertificateKeyFile>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -74,6 +74,7 @@
 	  <None Remove="Resources\Images\add_link.png" />
 	  <None Remove="Resources\Images\arrow_back.png" />
 	  <None Remove="Resources\Images\cancel.png" />
+	  <None Remove="Resources\Images\content_copy_20dp.png" />
 	  <None Remove="Resources\Images\cut.png" />
 	  <None Remove="Resources\Images\delete.png" />
 	  <None Remove="Resources\Images\edit.png" />
