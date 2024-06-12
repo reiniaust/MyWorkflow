@@ -29,7 +29,7 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
-		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+		<GenerateAppInstallerFile>True</GenerateAppInstallerFile>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
@@ -70,22 +70,21 @@
 
 	<ItemGroup>
 	  <None Remove="Resources\AppIcon\appiconfg.svg" />
-	  <None Remove="Resources\Images\add.png" />
+	  <None Remove="Resources\Images\add_20dp.png" />
 	  <None Remove="Resources\Images\add_link.png" />
 	  <None Remove="Resources\Images\arrow_back.png" />
 	  <None Remove="Resources\Images\cancel.png" />
-	  <None Remove="Resources\Images\content_copy_20dp.png" />
-	  <None Remove="Resources\Images\cut.png" />
+	  <None Remove="Resources\Images\content_copy.png" />
+	  <None Remove="Resources\Images\content_cut.png" />
+	  <None Remove="Resources\Images\content_paste.png" />
 	  <None Remove="Resources\Images\delete.png" />
 	  <None Remove="Resources\Images\edit.png" />
-	  <None Remove="Resources\Images\expand_less.png" />
-	  <None Remove="Resources\Images\expand_more.png" />
+	  <None Remove="Resources\Images\expand_circle_down.png" />
+	  <None Remove="Resources\Images\expand_circle_up.png" />
 	  <None Remove="Resources\Images\home.png" />
 	  <None Remove="Resources\Images\link_off.png" />
-	  <None Remove="Resources\Images\paste.png" />
 	  <None Remove="Resources\Images\refresh.png" />
 	  <None Remove="Resources\Images\save.png" />
-	  <None Remove="Resources\Images\search.png" />
 	  <None Remove="Resources\Splash\splash.svg" />
 	</ItemGroup>
 

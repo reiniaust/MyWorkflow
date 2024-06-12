@@ -43,7 +43,7 @@ public partial class MainPage : ContentPage
 	{
 		InitializeComponent();
 
-        btnPaste.IsVisible = false;
+        //btnPaste.IsVisible = false;
 
         try
         {
@@ -245,16 +245,10 @@ public partial class MainPage : ContentPage
 
     private void btnSave_Clicked(object sender, EventArgs e)
     {
-        string id = random.Next(idFrom, idTo).ToString();
         MyTask item = null;
         if (operation == "add")
         {
-            item = new MyTask()
-            {
-                gid = id,
-                parentid = currentItem.gid,
-                created_at = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss", CultureInfo.InvariantCulture)
-            };
+            item = newItem();
             setItem(item);
         }
         if (operation == "update")
@@ -313,12 +307,34 @@ public partial class MainPage : ContentPage
         btnExpandMore.IsVisible = true;
     }
 
+    private void btnCopy_Clicked(object sender, EventArgs e)
+    {
+        string clipboard = currentItem.name;
+        if (currentItem.notes != null && currentItem.notes != "" && !currentItem.notes.StartsWith("Erstellt am"))
+        {
+            clipboard += System.Environment.NewLine + currentItem.notes;
+        }
+
+        currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.OrderDate));
+        foreach (var task in currentList)
+        {
+            clipboard += System.Environment.NewLine + "- " + task.name;
+            if (task.notes != null && task.notes != "" && !task.notes.StartsWith("Erstellt am"))
+            {
+                clipboard += System.Environment.NewLine + "  " + task.notes;
+            }
+        }
+
+        Clipboard.Default.SetTextAsync(clipboard);
+
+        SetStatus("Der Eintrag wurde in die Zwischenablage kopiert.");
+    }
 
     private void btnCut_Clicked(object sender, EventArgs e)
     {
             cutItem = currentItem;
             btnCut.IsVisible = false;
-            btnPaste.IsVisible = true;
+            //btnPaste.IsVisible = true;
             currentItem = tasks.Find(x => x.gid == currentItem.parentid);
             LoadCurrentList();
             currentList.Remove(cutItem);
@@ -338,7 +354,7 @@ public partial class MainPage : ContentPage
         operation = "deleteLink";
     }
 
-    private void btnPaste_Clicked(object sender, EventArgs e)
+    private async void btnPaste_Clicked(object sender, EventArgs e)
     {
         MyTask item = null;
         if (cutItem != null) {
@@ -346,10 +362,25 @@ public partial class MainPage : ContentPage
             cutItem.parentid = currentItem.gid;
             btnCut.IsVisible = true;
             cutItem = null;
+            //btnPaste.IsVisible = false;
+            currentItem = item;
+            SaveTask("update", item);
         }
-        btnPaste.IsVisible = false;
-        currentItem = item;
-        SaveTask("update", item);
+        else
+        {
+            string clipboard = await Clipboard.GetTextAsync();
+            string[] clipbArray = clipboard.Split(System.Environment.NewLine);
+            if (clipboard != null)
+            {
+                item = newItem();
+                item.name = clipbArray[0];
+                if (clipboard.Length > 1 && !clipbArray[1].StartsWith("-"))
+                { 
+                    item.notes = clipbArray[1];
+                }
+                SaveTask("add", item);
+            }
+        }
     }
 
     void setEditStatus()
@@ -393,6 +424,7 @@ public partial class MainPage : ContentPage
                 btnExpandLess.IsVisible = stackMoreButtons.IsVisible;
             }
             btnCut.IsVisible = !editStatus;
+            btnCopy.IsVisible = !editStatus;
             btnAddLink.IsVisible = !editStatus && linkToItem == null;
             btnDeleteLink.IsVisible = !editStatus && currentItem.dependencies.Count > 0;
             btnDelete.IsVisible = !editStatus;
@@ -403,6 +435,15 @@ public partial class MainPage : ContentPage
         btnCancel.IsVisible = editStatus;
     }
 
+    MyTask newItem()
+    {
+        return new MyTask()
+        {
+            gid = random.Next(idFrom, idTo).ToString(),
+            parentid = currentItem.gid,
+            created_at = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss", CultureInfo.InvariantCulture)
+        };
+    }
 
     private void setItem(MyTask item)
     {
@@ -569,12 +610,6 @@ public partial class MainPage : ContentPage
 
         GetSummary(rootItem);
 
-        string clipboard = currentItem.name;
-        if (currentItem.notes != null && currentItem.notes != "" && !currentItem.notes.StartsWith("Erstellt am"))
-        {
-            clipboard += System.Environment.NewLine + currentItem.notes;
-        }
-
         currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.OrderDate));
         foreach (var task in currentList)
         {
@@ -587,15 +622,7 @@ public partial class MainPage : ContentPage
             {
                 task.NameInList = task.name;
             }
-
-            clipboard += System.Environment.NewLine + "- " + task.name;
-            if (task.notes != null && task.notes != "" && !task.notes.StartsWith("Erstellt am"))
-            {
-                clipboard += System.Environment.NewLine + "  " + task.notes;
-            }
         }
-
-        Clipboard.Default.SetTextAsync(clipboard);
 
         myListView.ItemsSource = currentList;
         
@@ -634,6 +661,10 @@ public partial class MainPage : ContentPage
         {
             item = tasks.FirstOrDefault(i => i.gid == item.parentid);
             string btnText = item.name;
+            if (btnText.Length > 15)
+            {
+                btnText = btnText.Substring(0, 12) + "...";
+            }
             if (item.name == "")
             {
                 btnText = "Home";
