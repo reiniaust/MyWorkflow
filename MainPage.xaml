@@ -144,7 +144,7 @@
 
                 <HorizontalStackLayout x:Name="stack_Due_on_Completed" Spacing="5">
                     <Label Text="Termin:" VerticalTextAlignment="Center"/>
-                    <Entry x:Name="entry_Due_on"></Entry>
+                    <Entry x:Name="entry_Due_on" TextChanged="entry_Due_on_TextChanged"></Entry>
                     <DatePicker x:Name="datePick_Due_on" DateSelected="datePick_Due_on_DateSelected"/>
 
                     <Label Text="Erledigt:" VerticalTextAlignment="Center"/>

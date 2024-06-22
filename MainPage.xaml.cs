@@ -37,11 +37,13 @@ public partial class MainPage : ContentPage
     bool editStatus;
     bool loadStatus;
     bool hasNews;
-    List<MyTask> synonyms; 
+    List<MyTask> synonyms;
+    List<MyTask> backList;
+
 
     public MainPage()
-	{
-		InitializeComponent();
+    {
+        InitializeComponent();
 
         //btnPaste.IsVisible = false;
 
@@ -81,15 +83,20 @@ public partial class MainPage : ContentPage
 
     private void editorNotes_TextChanged(object sender, TextChangedEventArgs e)
     {
-        //setEditStatus();
+        setEditStatus();
     }
 
     private void datePick_Due_on_DateSelected(object sender, DateChangedEventArgs e)
     {
         entry_Due_on.Text = datePick_Due_on.Date.ToString();
-        entry_Due_on.Text = entry_Due_on.Text.Substring(0, entry_Due_on.Text.Length - 3) ; // Sekunden von Datum/Uhrzeit abschneiden
+        entry_Due_on.Text = entry_Due_on.Text.Substring(0, entry_Due_on.Text.Length - 3); // Sekunden von Datum/Uhrzeit abschneiden
+    }
+
+    private void entry_Due_on_TextChanged(object sender, TextChangedEventArgs e)
+    {
         setEditStatus();
     }
+
 
     private void checkCompleted_CheckedChanged(object sender, CheckedChangedEventArgs e)
     {
@@ -125,7 +132,7 @@ public partial class MainPage : ContentPage
         searchText = searchText.Replace("*", "");
 
         MyTask synRoot = tasks.Find(x => x.name == "Synonyme");
-        if (synRoot != null) 
+        if (synRoot != null)
         {
             synonyms = tasks.Where(x => x.parentid == synRoot.gid).ToList();
         }
@@ -189,10 +196,10 @@ public partial class MainPage : ContentPage
         found = text.Contains(word, StringComparison.OrdinalIgnoreCase);
         if (!found)
         {
-            MyTask synItem = synonyms.Find(x  => x.name.Contains(word, StringComparison.OrdinalIgnoreCase));
-            if (synItem != null) 
-            { 
-                foreach(string synWord in synItem.name.Split("|"))
+            MyTask synItem = synonyms.Find(x => x.name.Contains(word, StringComparison.OrdinalIgnoreCase));
+            if (synItem != null)
+            {
+                foreach (string synWord in synItem.name.Split("|"))
                 {
                     found = text.Contains(synWord, StringComparison.OrdinalIgnoreCase);
                     if (found)
@@ -207,11 +214,10 @@ public partial class MainPage : ContentPage
 
     private void btnBack_Clicked(object sender, EventArgs e)
     {
-        if (currentItem.parentid != null)
-        {
-            currentItem = tasks.Find(x => x.gid == currentItem.parentid);   
-            LoadCurrentList();
-        }
+        backList.RemoveAt(backList.Count - 1);
+        currentItem = backList[backList.Count - 1];
+        backList.RemoveAt(backList.Count - 1);
+        LoadCurrentList();
     }
 
     private void btnAdd_Clicked(object sender, EventArgs e)
@@ -224,6 +230,7 @@ public partial class MainPage : ContentPage
         editorNotes.Text = "";
         entry_Due_on.Text = "";
         entryText.Focus();
+        SetStatus("Neuer Punkt");
     }
 
 
@@ -332,12 +339,12 @@ public partial class MainPage : ContentPage
 
     private void btnCut_Clicked(object sender, EventArgs e)
     {
-            cutItem = currentItem;
-            btnCut.IsVisible = false;
-            //btnPaste.IsVisible = true;
-            currentItem = tasks.Find(x => x.gid == currentItem.parentid);
-            LoadCurrentList();
-            currentList.Remove(cutItem);
+        cutItem = currentItem;
+        btnCut.IsVisible = false;
+        //btnPaste.IsVisible = true;
+        currentItem = tasks.Find(x => x.gid == currentItem.parentid);
+        LoadCurrentList();
+        currentList.Remove(cutItem);
     }
 
     private void btnAddLink_Clicked(object sender, EventArgs e)
@@ -356,8 +363,8 @@ public partial class MainPage : ContentPage
 
     private async void btnPaste_Clicked(object sender, EventArgs e)
     {
-        MyTask item = null;
         if (cutItem != null) {
+            MyTask item = null;
             item = cutItem;
             cutItem.parentid = currentItem.gid;
             btnCut.IsVisible = true;
@@ -369,16 +376,35 @@ public partial class MainPage : ContentPage
         else
         {
             string clipboard = await Clipboard.GetTextAsync();
-            string[] clipbArray = clipboard.Split(System.Environment.NewLine);
-            if (clipboard != null)
+            addFromClipboard(clipboard);
+        }
+    }
+
+    void addFromClipboard(string clipboard)
+    {
+        MyTask item = null;
+        
+        if (clipboard != null)
+        {
+            string[] clipChildren = clipboard.Split("-");
+            if (clipChildren.Length > 0)
             {
-                item = newItem();
-                item.name = clipbArray[0];
-                if (clipboard.Length > 1 && !clipbArray[1].StartsWith("-"))
-                { 
-                    item.notes = clipbArray[1];
+                string[] clipbArray = clipChildren[0].Split(System.Environment.NewLine);
+                if (clipbArray.Length > 0)
+                {
+                    item = newItem();
+                    item.name = clipbArray[0];
+                    if (clipbArray.Length > 1)
+                    {
+                        item.notes = clipbArray[1];
+                    }
+                    SaveTask("add", item);
+                    for (int i = 1; i < clipChildren.Length; i++)
+                    {
+                        currentItem = item;
+                        addFromClipboard(clipChildren[i].Trim());
+                    }
                 }
-                SaveTask("add", item);
             }
         }
     }
@@ -400,8 +426,7 @@ public partial class MainPage : ContentPage
         editorNotes.IsVisible = editStatus || currentItem.notes != "";
         stack_Due_on_Completed.IsVisible = editStatus || currentItem.due_on != null;
 
-        //btnBack.IsVisible = !editStatus || linkToItem != null;
-        btnBack.IsVisible = false;
+        btnBack.IsVisible = !editStatus || linkToItem != null;
         //btnSearch.IsVisible = !editStatus || linkToItem != null;
         if (currentItem.gid == "")
         {
@@ -418,11 +443,6 @@ public partial class MainPage : ContentPage
         {
             btnRefresh.IsVisible = !editStatus || linkToItem != null;
             btnEdit.IsVisible = !editStatus;
-            if (!editStatus)
-            {
-                btnExpandMore.IsVisible = !stackMoreButtons.IsVisible;
-                btnExpandLess.IsVisible = stackMoreButtons.IsVisible;
-            }
             btnCut.IsVisible = !editStatus;
             btnCopy.IsVisible = !editStatus;
             btnAddLink.IsVisible = !editStatus && linkToItem == null;
@@ -431,8 +451,11 @@ public partial class MainPage : ContentPage
         }
 
         btnAdd.IsVisible = !editStatus;
+        btnPaste.IsVisible = !editStatus;
         btnSave.IsVisible = editStatus;
         btnCancel.IsVisible = editStatus;
+        btnExpandMore.IsVisible = !stackMoreButtons.IsVisible;
+        btnExpandLess.IsVisible = stackMoreButtons.IsVisible;
     }
 
     MyTask newItem()
@@ -513,13 +536,14 @@ public partial class MainPage : ContentPage
             tasks = new List<MyTask>();
         }
         currentItem = tasks.Find(x => x.gid == "");
-        currentItem.name = "";
+        currentItem.name = "Home";
         if (currentItem == null)
         {
             currentItem = new MyTask() { gid = "" };
             tasks.Add(currentItem);
         }
         rootItem = currentItem;
+        backList = new List<MyTask>();
         editStatus = false;
 
         ReadAllAssana();
@@ -550,6 +574,8 @@ public partial class MainPage : ContentPage
         {
             currentItem = tasks.Find(x => x.gid == "");
         }
+
+        backList.Add(currentItem);
 
         lblCurrentTitle.Text = currentItem.name;
 
@@ -645,9 +671,13 @@ public partial class MainPage : ContentPage
         PathButtons();
 
 
-        if (currentItem.gid != "")
+        if (backList.Count() >1)
         {
             btnBack.IsEnabled = true;
+        }
+        else
+        {
+            btnBack.IsEnabled = false;
         }
         //editorNotes.Focus();
         loadStatus = false;
@@ -657,7 +687,7 @@ public partial class MainPage : ContentPage
     {
         List<Button> buttons = new List<Button>();
         MyTask item = currentItem;
-        while (item != null && item.name != "")
+        while (item != null && item.name != "Home")
         {
             item = tasks.FirstOrDefault(i => i.gid == item.parentid);
             string btnText = item.name;
@@ -669,6 +699,7 @@ public partial class MainPage : ContentPage
             {
                 btnText = "Home";
             }
+
             Button button = new Button() { Text = btnText };
             button.AutomationId = item.gid;
             button.Clicked += btnPath_Clicked;
@@ -1210,7 +1241,7 @@ public partial class MainPage : ContentPage
         foreach (var id in item.dependencies)
         {
             MyTask depItem = tasks.Find(x => x.gid == id);
-            if (depItem.notes != null && depItem.notes.Contains("@") && !depItem.notes.Contains(settings.Email))
+            if (depItem != null && depItem.notes != null && depItem.notes.Contains("@") && !depItem.notes.Contains(settings.Email))
             {
                 isResponsible = false;
             }
