@@ -421,7 +421,7 @@ public partial class MainPage : ContentPage
 
     void setButtonStatus()
     {
-        //searchBar.IsVisible = !editStatus;
+        searchBar.IsVisible = !editStatus || linkToItem != null;
         entryText.IsVisible = editStatus;
         editorNotes.IsVisible = editStatus || currentItem.notes != "";
         stack_Due_on_Completed.IsVisible = editStatus || currentItem.due_on != null;
