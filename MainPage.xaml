@@ -41,49 +41,35 @@
                     <Button
                         x:Name="btnRefresh"
                         ImageSource="refresh.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnRefresh_Clicked" />
                     <Button
                         x:Name="btnBack"
                         ImageSource="arrow_back.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnBack_Clicked" />
-                    <!--
-                    <Button
-                        x:Name="btnSearch"
-                        ImageSource="search.png"
-                        Clicked="btnSearch_Clicked" />
-                    -->
                     <Button
                         x:Name="btnAdd"
-                        ImageSource="add_20dp.png"
-                        MaximumHeightRequest="10"
+                        ImageSource="add_item.png"
                         Clicked="btnAdd_Clicked" />
                     <Button
                         x:Name="btnEdit"
                         ImageSource="edit.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnEdit_Clicked" />
                     <Button
                         x:Name="btnSave"
                         ImageSource="save.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnSave_Clicked" />
                     <Button
                         x:Name="btnCancel"
                         ImageSource="cancel.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnCancel_Clicked" />
                     <Button
                         x:Name="btnExpandMore"
                         ImageSource="expand_circle_down.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnExpandMore_Clicked" />
                     <Button
                         x:Name="btnExpandLess"
                         IsVisible="false"
                         ImageSource="expand_circle_up.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnExpandLess_Clicked" />
 
                 </HorizontalStackLayout>
@@ -96,32 +82,26 @@
                     <Button
                         x:Name="btnCopy"
                         ImageSource="content_copy.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnCopy_Clicked" />
                     <Button
                         x:Name="btnCut"
                         ImageSource="content_cut.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnCut_Clicked" />
                     <Button
                         x:Name="btnAddLink"
                         ImageSource="add_link.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnAddLink_Clicked" />
                     <Button
                         x:Name="btnDeleteLink"
                         ImageSource="link_off.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnDeleteLink_Clicked" />
                     <Button
                         x:Name="btnPaste"
                         ImageSource="content_paste.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnPaste_Clicked" />
                     <Button
                         x:Name="btnDelete"
                         ImageSource="delete.png"
-                        MaximumHeightRequest="10"
                         Clicked="btnDelete_Clicked" />
 
                 </HorizontalStackLayout>
@@ -142,15 +122,21 @@
                     TextChanged="editorNotes_TextChanged"
                     AutoSize="TextChanges"/>
 
-                <HorizontalStackLayout x:Name="stack_Due_on_Completed" Spacing="5">
-                    <Label Text="Termin:" VerticalTextAlignment="Center"/>
-                    <Entry x:Name="entry_Due_on" TextChanged="entry_Due_on_TextChanged"></Entry>
-                    <DatePicker x:Name="datePick_Due_on" DateSelected="datePick_Due_on_DateSelected"/>
+                <VerticalStackLayout x:Name="stack_Due_on_Completed" >
+                    <HorizontalStackLayout Spacing="5">
+                        <Label Text="Zuständig:" VerticalTextAlignment="Center"/>
+                        <Picker x:Name="pickUser"/>
+                    </HorizontalStackLayout>
 
-                    <Label Text="Erledigt:" VerticalTextAlignment="Center"/>
-                    <CheckBox x:Name="checkCompleted" CheckedChanged="checkCompleted_CheckedChanged"/>
-                </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="5">
+                        <Label Text="Termin:" VerticalTextAlignment="Center"/>
+                        <Entry x:Name="entry_Due_on" TextChanged="entry_Due_on_TextChanged"></Entry>
+                        <DatePicker x:Name="datePick_Due_on" DateSelected="datePick_Due_on_DateSelected"/>
 
+                        <Label Text="Erledigt:" VerticalTextAlignment="Center"/>
+                        <CheckBox x:Name="checkCompleted" CheckedChanged="checkCompleted_CheckedChanged"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
                 
                 <Label x:Name="lblDepend" Text="Ist abhängig von:"/>
                 <ListView Margin="20,0,0,0"

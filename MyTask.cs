@@ -19,6 +19,7 @@ namespace MyWorkflow
         public string modified_at { get; set; }
         public string due_on { get; set; }
         public string next_due_on { get; set; }
+        public Assignee assignee { get; set; }
         public bool completed { get; set; }
         public List<string> dependencies { get; set; } = new List<string>(); 
         public string NameInList { get; set; }

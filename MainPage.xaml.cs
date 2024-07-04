@@ -23,6 +23,7 @@ public partial class MainPage : ContentPage
     MyTask oldItem;
     MyTask cutItem;
     MyTask linkToItem;
+    MyTask userRootItem;
     ObservableCollection<MyTask> currentList;
     Random random = new Random();
     int idFrom = 100000000;
@@ -64,6 +65,61 @@ public partial class MainPage : ContentPage
         }
 
     }
+    private void StartUp()
+    {
+
+        startEamilView.IsVisible = false;
+        mainView.IsVisible = true;
+
+        searchText = "";
+        startEamilView.IsVisible = false;
+        mainView.IsVisible = true;
+
+        searchText = "";
+        searchBar.Text = "*";
+        try
+        {
+            jsonString = File.ReadAllText(Path.Combine(docPath, "MyWorkflowData.json"));
+            //tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
+            tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
+
+            // verwaiste Datensätze löschen
+            tasks = tasks.Where(x => ItemPathLeftToRight(x) != null).ToList();
+            tasks = tasks.Where(x => !(x.notes != null && x.notes.Contains("[nicht aktualisiert"))).ToList();
+        }
+        catch (Exception)
+        {
+            tasks = new List<MyTask>();
+        }
+        currentItem = tasks.Find(x => x.gid == "");
+        if (currentItem == null)
+        {
+            currentItem = new MyTask() { gid = "" };
+            tasks.Add(currentItem);
+        }
+        currentItem.name = "Home";
+        rootItem = currentItem;
+
+        userRootItem = tasks.Find(x => x.gid == "-1");
+        if (userRootItem == null)
+        {
+            userRootItem = new MyTask() { gid = "-1", parentid = "", name = "Benutzer" };
+            tasks.Add(userRootItem);
+        }
+
+        backList = new List<MyTask>();
+        editStatus = false;
+
+
+        ReadAllAssana();
+
+        ReadControlling();
+
+        ReadEmails();
+
+        LoadCurrentList();
+    }
+
     private void btnSaveEmail_Clicked(object sender, EventArgs e)
     {
         if (entryEmail.Text != null)
@@ -482,6 +538,15 @@ public partial class MainPage : ContentPage
         {
             item.due_on = null;
         }
+        if (pickUser.SelectedItem != null)
+        {
+            MyTask user = (MyTask)pickUser.SelectedItem;
+            item.assignee = new() { gid = user.gid, name = user.name };
+        }
+        else
+        {
+            item.assignee = null;
+        }
         currentItem.completed = checkCompleted.IsChecked;
 
         /*
@@ -501,6 +566,7 @@ public partial class MainPage : ContentPage
         toItem.name = fromItem.name;
         toItem.notes = fromItem.notes;
         toItem.due_on = fromItem.due_on;
+        toItem.assignee = fromItem.assignee;
         toItem.completed = fromItem.completed;
         if (toItem.modified_at != fromItem.modified_at)
         {
@@ -509,51 +575,6 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private void StartUp()
-    {
-
-        startEamilView.IsVisible = false;
-        mainView.IsVisible = true;
-
-        searchText = "";
-        startEamilView.IsVisible = false;
-        mainView.IsVisible = true;
-
-        searchText = "";
-        searchBar.Text = "*";
-        try
-        {
-            jsonString = File.ReadAllText(Path.Combine(docPath, "MyWorkflowData.json"));
-            //tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
-            tasks = new List<MyTask>(JsonSerializer.Deserialize<MyTask[]>(jsonString));
-
-            // verwaiste Datensätze löschen
-            tasks = tasks.Where(x => ItemPathLeftToRight(x) != null).ToList();
-            tasks = tasks.Where(x => !(x.notes != null && x.notes.Contains("[nicht aktualisiert"))).ToList();
-        }
-        catch (Exception)
-        {
-            tasks = new List<MyTask>();
-        }
-        currentItem = tasks.Find(x => x.gid == "");
-        currentItem.name = "Home";
-        if (currentItem == null)
-        {
-            currentItem = new MyTask() { gid = "" };
-            tasks.Add(currentItem);
-        }
-        rootItem = currentItem;
-        backList = new List<MyTask>();
-        editStatus = false;
-
-        ReadAllAssana();
-
-        ReadControlling();
-        
-        ReadEmails();
-
-        LoadCurrentList();
-    }
 
     void ReadAllAssana()
     {
@@ -576,6 +597,14 @@ public partial class MainPage : ContentPage
         }
 
         backList.Add(currentItem);
+
+        List<MyTask> userList = tasks.Where(x => x.parentid == userRootItem.gid).OrderByDescending(x => x.name).ToList();
+        pickUser.ItemsSource = userList;
+        pickUser.ItemDisplayBinding = new Binding("name");
+        if (currentItem.assignee != null)
+        {
+            pickUser.SelectedItem = userList.Find(x => x.gid == currentItem.assignee.gid);
+        }
 
         lblCurrentTitle.Text = currentItem.name;
 
@@ -800,6 +829,11 @@ public partial class MainPage : ContentPage
                     task.created_at = taskResponse.data.created_at;
                     task.modified_at = taskResponse.data.modified_at;
                     task.due_on = taskResponse.data.due_on;
+                    task.assignee = taskResponse.data.assignee;
+                    if (task.assignee != null && tasks.Find(x => x.gid == task.assignee.gid) == null)
+                    {
+                        tasks.Add(new() {parentid = userRootItem.gid, gid = task.assignee.gid, name = task.assignee.name });
+                    }
                     task.completed = taskResponse.data.completed;
                     task.parentid = rootTask.gid;
 
@@ -877,6 +911,7 @@ public partial class MainPage : ContentPage
                     subtask.created_at = taskResponse.data.created_at;
                     subtask.modified_at = taskResponse.data.modified_at;
                     subtask.due_on = taskResponse.data.due_on;
+                    subtask.assignee = taskResponse.data.assignee;
                     subtask.completed = taskResponse.data.completed;
                     subtask.parentid = task.gid;
 
@@ -1020,7 +1055,8 @@ public partial class MainPage : ContentPage
         {
             string beginStr = "{\"data\":{\"name\":\"" + task.name 
                 + "\",\"notes\":\"" + task.notes
-                + "\",\"due_on\":\"" + task.due_on 
+                + "\",\"due_on\":\"" + task.due_on
+                + "\",\"assignee\":\"" + task.assignee 
                 + "\",\"completed\":\"" + task.completed;
             if (operation == "add")
             {
@@ -1457,5 +1493,9 @@ public partial class MainPage : ContentPage
         }
     }
 
+    private void selectAssignee_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+
+    }
 }
 
