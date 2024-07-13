@@ -9,5 +9,6 @@ namespace MyWorkflow
     internal class MySettings
     {
         public string Email { get; set; }
+        public string LastUserId { get; set; }
     }
 }

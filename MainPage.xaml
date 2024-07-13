@@ -30,6 +30,14 @@
                 Padding="10">
 
                 <Label x:Name="lblStatus"></Label>
+                
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Zuständig:" VerticalTextAlignment="Center"/>
+                    <Picker 
+                        x:Name="pickUserFilter"
+                        SelectedIndexChanged="pickUserFilter_SelectedIndexChanged"/>
+                </HorizontalStackLayout>
+
                 <SearchBar 
                     x:Name="searchBar" 
                     TextChanged="searchBar_TextChanged" 
@@ -123,13 +131,13 @@
                     AutoSize="TextChanges"/>
 
                 <VerticalStackLayout x:Name="stack_Due_on_Completed" >
-                    <HorizontalStackLayout Spacing="5">
-                        <Label Text="Zuständig:" VerticalTextAlignment="Center"/>
-                        <Picker x:Name="pickUser"/>
+                    <HorizontalStackLayout>
+                        <Label Text="Zuständig:" VerticalTextAlignment="Center" WidthRequest="80"/>
+                        <Picker x:Name="pickUserAssignee"/>
                     </HorizontalStackLayout>
 
                     <HorizontalStackLayout Spacing="5">
-                        <Label Text="Termin:" VerticalTextAlignment="Center"/>
+                        <Label Text="Termin:" VerticalTextAlignment="Center" WidthRequest="80"/>
                         <Entry x:Name="entry_Due_on" TextChanged="entry_Due_on_TextChanged"></Entry>
                         <DatePicker x:Name="datePick_Due_on" DateSelected="datePick_Due_on_DateSelected"/>
 

@@ -15,6 +15,7 @@ namespace MyWorkflow;
 public partial class MainPage : ContentPage
 {
     List<MyTask> tasks;
+    List<MyTask> filteredTasks;
     MySettings settings;
     string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     string jsonString;
@@ -117,6 +118,22 @@ public partial class MainPage : ContentPage
 
         ReadEmails();
 
+        List<MyTask> userList = tasks.Where(x => x.parentid == userRootItem.gid).ToList();
+        userList.Add(new MyTask() { gid = "", name = " " });
+        userList = userList.OrderBy(x => x.name).ToList();
+        if (pickUserFilter.ItemsSource == null || pickUserFilter.ItemsSource.Count != userList.Count)
+        {
+            pickUserFilter.ItemsSource = userList;
+            pickUserFilter.ItemDisplayBinding = new Binding("name");
+        }
+        pickUserAssignee.ItemsSource = userList;
+        pickUserAssignee.ItemDisplayBinding = new Binding("name");
+        if (currentItem.assignee != null)
+        {
+            pickUserAssignee.SelectedItem = userList.Find(x => x.gid == currentItem.assignee.gid);
+        }
+
+        filteredTasks = tasks;
         LoadCurrentList();
     }
 
@@ -231,6 +248,22 @@ public partial class MainPage : ContentPage
         }
         return found;
     }
+
+    bool isUserFilterInItem(MyTask item, string userId)
+    {
+        bool found = false;
+        while (item != null && item.gid != "")
+        {
+            if (item.assignee != null && item.assignee.gid == userId || item.due_on != null && !item.completed && item.assignee == null)
+            {
+                found = true;
+                break;
+            }
+            item = tasks.FirstOrDefault(i => i.gid == item.parentid);
+        }
+        return found;
+    }
+
 
     string searchIn(MyTask item) {
         string searchIn = "";
@@ -538,15 +571,17 @@ public partial class MainPage : ContentPage
         {
             item.due_on = null;
         }
-        if (pickUser.SelectedItem != null)
+
+        item.assignee = null;
+        if (pickUserAssignee.SelectedItem != null)
         {
-            MyTask user = (MyTask)pickUser.SelectedItem;
-            item.assignee = new() { gid = user.gid, name = user.name };
+            MyTask user = (MyTask)pickUserAssignee.SelectedItem;
+            if (user.gid != "")
+            {
+                item.assignee = new() { gid = user.gid, name = user.name };
+            }
         }
-        else
-        {
-            item.assignee = null;
-        }
+
         currentItem.completed = checkCompleted.IsChecked;
 
         /*
@@ -587,6 +622,7 @@ public partial class MainPage : ContentPage
     }
     private void LoadCurrentList()
     {
+
         SetStatus("");
 
         loadStatus = true;
@@ -596,15 +632,33 @@ public partial class MainPage : ContentPage
             currentItem = tasks.Find(x => x.gid == "");
         }
 
-        backList.Add(currentItem);
-
-        List<MyTask> userList = tasks.Where(x => x.parentid == userRootItem.gid).OrderByDescending(x => x.name).ToList();
-        pickUser.ItemsSource = userList;
-        pickUser.ItemDisplayBinding = new Binding("name");
-        if (currentItem.assignee != null)
+        MyTask user = (MyTask)pickUserFilter.SelectedItem;
+        if (user == null || user.gid == "")
         {
-            pickUser.SelectedItem = userList.Find(x => x.gid == currentItem.assignee.gid);
+            filteredTasks = tasks;
         }
+        else
+        {
+            filteredTasks = tasks.Where(x => isUserFilterInItem(x, user.gid)).ToList();
+            List<MyTask> newTasks = new List<MyTask>();
+            newTasks = newTasks.Concat(filteredTasks).ToList();
+            foreach (var item in newTasks)
+            {
+                MyTask parent = tasks.FirstOrDefault(i => i.gid == item.parentid);
+                while (parent != null && parent.parentid != null)
+                {
+                    parent = tasks.FirstOrDefault(i => i.gid == parent.parentid);
+                    if (filteredTasks.Find(x => x.gid == parent.gid) == null)
+                    {
+                        filteredTasks.Add(parent);
+                    }
+                }
+            }
+            settings.LastUserId = user.gid;
+        }
+
+
+        backList.Add(currentItem);
 
         lblCurrentTitle.Text = currentItem.name;
 
@@ -665,7 +719,7 @@ public partial class MainPage : ContentPage
 
         GetSummary(rootItem);
 
-        currentList = new ObservableCollection<MyTask>(tasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.OrderDate));
+        currentList = new ObservableCollection<MyTask>(filteredTasks.Where(i => i.parentid == currentItem.gid).OrderBy(x => x.OrderDate));
         foreach (var task in currentList)
         {
             if (task.notes != null && task.notes != "" && !task.notes.StartsWith("Erstellt am") || tasks.Find(x => x.parentid == task.gid) != null)
@@ -864,6 +918,7 @@ public partial class MainPage : ContentPage
             if (!editStatus)
             {
                 // Nicht neu laden, während editiert wird
+                filteredTasks = tasks;
                 LoadCurrentList();
             }
 
@@ -1096,6 +1151,7 @@ public partial class MainPage : ContentPage
                 AsanaTaskResponse taskResponse = JsonSerializer.Deserialize<AsanaTaskResponse>(response.Content);
                 task.gid = taskResponse.data.gid;
                 tasks.Add(task);
+                filteredTasks = tasks;
                 LoadCurrentList();
             }
         }
@@ -1182,7 +1238,7 @@ public partial class MainPage : ContentPage
         {
             if (IsResponsible(item))
             {
-                foreach (var subItem in tasks.Where(x => x.parentid == item.gid))
+                foreach (var subItem in filteredTasks.Where(x => x.parentid == item.gid))
                 {
                     GetNextDateFromItems(subItem);
                     if (!subItem.completed && subItem.next_due_on != null)
@@ -1230,7 +1286,7 @@ public partial class MainPage : ContentPage
     {
         double summary = 0;
         string unit = "";
-        foreach (var subItem in tasks.Where(x => x.parentid == item.gid))
+        foreach (var subItem in filteredTasks.Where(x => x.parentid == item.gid))
         {
             GetSummary(subItem);
             if (subItem.name != null)
@@ -1493,9 +1549,9 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private void selectAssignee_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void pickUserFilter_SelectedIndexChanged(object sender, EventArgs e)
     {
-
+        LoadCurrentList();
     }
 }
 
